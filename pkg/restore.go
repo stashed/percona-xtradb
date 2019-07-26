@@ -16,27 +16,27 @@ import (
 
 func NewCmdRestore() *cobra.Command {
 	var (
-		masterURL      string
-		kubeconfigPath string
-		namespace      string
-		appBindingName string
-		outputDir      string
-		xtradbArgs     string
-		setupOpt       = restic.SetupOptions{
+		masterURL         string
+		kubeconfigPath    string
+		namespace         string
+		appBindingName    string
+		outputDir         string
+		mysqlArgs         string
+		targetAppReplicas int32
+		setupOpt          = restic.SetupOptions{
 			ScratchDir:  restic.DefaultScratchDir,
 			EnableCache: false,
 		}
 		dumpOpt = restic.DumpOptions{
-			Host:     restic.DefaultHost,
-			FileName: MySqlDumpFile,
+			Host: restic.DefaultHost,
 		}
 		metrics = restic.MetricsOptions{
-			JobName: JobMySqlBackup,
+			JobName: jobMySqlBackup,
 		}
 	)
 
 	cmd := &cobra.Command{
-		Use:               "restore-xtradb",
+		Use:               "restore-perconaxtradb",
 		Short:             "Restores XtraDB DB Backup",
 		DisableAutoGenTag: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -67,61 +67,80 @@ func NewCmdRestore() *cobra.Command {
 				return err
 			}
 
-			// get app binding
-			appBinding, err := appCatalogClient.AppcatalogV1alpha1().AppBindings(namespace).Get(appBindingName, metav1.GetOptions{})
-			if err != nil {
-				return err
-			}
-			// get secret
-			appBindingSecret, err := kubeClient.CoreV1().Secrets(namespace).Get(appBinding.Spec.Secret.Name, metav1.GetOptions{})
-			if err != nil {
-				return err
-			}
-
 			// init restic wrapper
 			resticWrapper, err := restic.NewResticWrapper(setupOpt)
 			if err != nil {
 				return err
 			}
 
-			// set env for xtradb
-			resticWrapper.SetEnv(EnvMySqlPassword, string(appBindingSecret.Data[MySqlPassword]))
-			// setup pipe command
-			dumpOpt.StdoutPipeCommand = restic.Command{
-				Name: MySqlRestoreCMD,
-				Args: []interface{}{
-					"-u", string(appBindingSecret.Data[MySqlUser]),
-					"-h", appBinding.Spec.ClientConfig.Service.Name,
-				},
-			}
-			if xtradbArgs != "" {
-				dumpOpt.StdoutPipeCommand.Args = append(dumpOpt.StdoutPipeCommand.Args, xtradbArgs)
-			}
+			if targetAppReplicas == 1 {
+				// get app binding
+				appBinding, err := appCatalogClient.AppcatalogV1alpha1().AppBindings(namespace).Get(appBindingName, metav1.GetOptions{})
+				if err != nil {
+					return err
+				}
+				// get secret
+				appBindingSecret, err := kubeClient.CoreV1().Secrets(namespace).Get(appBinding.Spec.Secret.Name, metav1.GetOptions{})
+				if err != nil {
+					return err
+				}
 
-			// wait for DB ready
-			waitForDBReady(appBinding.Spec.ClientConfig.Service.Name, appBinding.Spec.ClientConfig.Service.Port)
+				// set env for mysql
+				resticWrapper.SetEnv(envMySqlPassword, string(appBindingSecret.Data[mySqlPassword]))
+
+				// set backed up file name
+				dumpOpt.FileName = mySqlDumpFile
+
+				// setup pipe command
+				dumpOpt.StdoutPipeCommand = restic.Command{
+					Name: mySqlRestoreCMD,
+					Args: []interface{}{
+						"-u", string(appBindingSecret.Data[mySqlUser]),
+						"-h", appBinding.Spec.ClientConfig.Service.Name,
+					},
+				}
+				if mysqlArgs != "" {
+					dumpOpt.StdoutPipeCommand.Args = append(dumpOpt.StdoutPipeCommand.Args, mysqlArgs)
+				}
+
+				// wait for DB ready
+				waitForDBReady(appBinding.Spec.ClientConfig.Service.Name, appBinding.Spec.ClientConfig.Service.Port)
+			} else {
+				// set backed up file name
+				dumpOpt.FileName = xtraBackupStreamFile
+
+				// setup pipe command
+				dumpOpt.StdoutPipeCommand = restic.Command{
+					Name: "bash",
+					Args: []interface{}{
+						"-c",
+						"/restore.sh /var/lib/mysql",
+					},
+				}
+			}
 
 			// Run dump
-			dumpOutput, backupErr := resticWrapper.Dump(dumpOpt)
+			restore, restoreErr := resticWrapper.Dump(dumpOpt)
 			// If metrics are enabled then generate metrics
 			if metrics.Enabled {
-				err := dumpOutput.HandleMetrics(&metrics, backupErr)
+				err := restore.HandleMetrics(&metrics, restoreErr)
 				if err != nil {
-					return errors.NewAggregate([]error{backupErr, err})
+					return errors.NewAggregate([]error{restoreErr, err})
 				}
 			}
 			// If output directory specified, then write the output in "output.json" file in the specified directory
-			if backupErr == nil && outputDir != "" {
-				err := dumpOutput.WriteOutput(filepath.Join(outputDir, restic.DefaultOutputFileName))
+			if restoreErr == nil && outputDir != "" {
+				err := restore.WriteOutput(filepath.Join(outputDir, restic.DefaultOutputFileName))
 				if err != nil {
 					return err
 				}
 			}
-			return backupErr
+			return restoreErr
 		},
 	}
 
-	cmd.Flags().StringVar(&xtradbArgs, "xtradb-args", xtradbArgs, "Additional arguments")
+	cmd.Flags().StringVar(&mysqlArgs, "xtradb-args", mysqlArgs, "Additional arguments")
+	cmd.Flags().Int32Var(&targetAppReplicas, "target-app-replicas", targetAppReplicas, "Additional arguments")
 
 	cmd.Flags().StringVar(&masterURL, "master", masterURL, "The address of the Kubernetes API server (overrides any value in kubeconfig)")
 	cmd.Flags().StringVar(&kubeconfigPath, "kubeconfig", kubeconfigPath, "Path to kubeconfig file with authorization information (the master location is set by the master flag).")
@@ -139,6 +158,7 @@ func NewCmdRestore() *cobra.Command {
 	cmd.Flags().IntVar(&setupOpt.MaxConnections, "max-connections", setupOpt.MaxConnections, "Specify maximum concurrent connections for GCS, Azure and B2 backend")
 
 	cmd.Flags().StringVar(&dumpOpt.Host, "hostname", dumpOpt.Host, "Name of the host machine")
+	cmd.Flags().StringVar(&dumpOpt.SourceHost, "source-hostname", dumpOpt.SourceHost, "Name of the host from where data will be restored")
 	// TODO: sliceVar
 	cmd.Flags().StringVar(&dumpOpt.Snapshot, "snapshot", dumpOpt.Snapshot, "Snapshot to dump")
 
