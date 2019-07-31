@@ -1,7 +1,7 @@
 SHELL=/bin/bash -o pipefail
 
 # The binary to build (just the basename).
-BIN      := percona-xtradb-stash
+BIN      := stash-percona-xtradb
 COMPRESS ?= no
 
 # Where to push the docker image.
@@ -44,8 +44,8 @@ BIN_PLATFORMS    := $(DOCKER_PLATFORMS)
 OS   := $(if $(GOOS),$(GOOS),$(shell go env GOOS))
 ARCH := $(if $(GOARCH),$(GOARCH),$(shell go env GOARCH))
 
-BASEIMAGE_PROD   ?= percona/percona-xtradb-cluster:5.7.25
-BASEIMAGE_DBG    ?= percona/percona-xtradb-cluster:5.7.25
+BASEIMAGE_PROD   ?= alittleprogramming/pxb-24-test:t1
+BASEIMAGE_DBG    ?= alittleprogramming/pxb-24-test:t1
 
 IMAGE            := $(REGISTRY)/$(BIN)
 VERSION_PROD     := $(VERSION)
