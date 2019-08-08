@@ -22,10 +22,10 @@ require (
 	k8s.io/kube-openapi v0.0.0-20190510232812-a01b7d5d6c22 // indirect
 	k8s.io/kubernetes v1.14.4 // indirect
 	k8s.io/utils v0.0.0-20190520173318-324c5df7d3f0 // indirect
-	kmodules.xyz/client-go v0.0.0-20190715080709-7162a6c90b04
-	kmodules.xyz/custom-resources v0.0.0-20190723185639-711575c0b8a9
-	kubedb.dev/apimachinery v0.0.0-20190725064317-38d61431595b
-	stash.appscode.dev/stash v0.0.0-20190731132032-0517a6fd8305
+	kmodules.xyz/client-go v0.0.0-20190802200916-043217632b6a
+	kmodules.xyz/custom-resources v0.0.0-20190802202832-aaad432d3364
+	kubedb.dev/apimachinery v0.13.0-rc.0.0.20190808091223-58fe1ccf1c97
+	stash.appscode.dev/stash v0.9.0-rc.0
 )
 
 replace (

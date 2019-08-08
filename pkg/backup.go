@@ -29,7 +29,7 @@ const (
 	mySqlDumpCMD     = "mysqldump"
 	mySqlRestoreCMD  = "mysql"
 	envMySqlPassword = "MYSQL_PWD"
-	defaultDumpArgs = "--all-databases"
+	defaultDumpArgs  = "--all-databases"
 
 	socatRertyVal = 30
 )
@@ -42,7 +42,7 @@ func NewCmdBackup() *cobra.Command {
 		appBindingName string
 		outputDir      string
 		dumpArgs       string
-		garbdCnf       kubedbconfig_api.GarbdConfiguration
+		garbdCnf       kubedbconfig_api.GaleraArbitratorConfiguration
 		socatRetry     int32
 
 		setupOpt = restic.SetupOptions{

@@ -11,7 +11,7 @@ github.com/Azure/go-autorest/autorest/adal
 github.com/Azure/go-autorest/autorest/date
 # github.com/Azure/go-autorest/logger v0.1.0
 github.com/Azure/go-autorest/logger
-# github.com/Azure/go-autorest/tracing v0.1.0
+# github.com/Azure/go-autorest/tracing v0.2.0
 github.com/Azure/go-autorest/tracing
 # github.com/PuerkitoBio/purell v1.1.1
 github.com/PuerkitoBio/purell
@@ -508,7 +508,7 @@ k8s.io/kubernetes/pkg/util/hash
 k8s.io/utils/integer
 k8s.io/utils/buffer
 k8s.io/utils/trace
-# kmodules.xyz/client-go v0.0.0-20190715080709-7162a6c90b04
+# kmodules.xyz/client-go v0.0.0-20190802200916-043217632b6a
 kmodules.xyz/client-go/logs
 kmodules.xyz/client-go/tools/cli
 kmodules.xyz/client-go/tools/analytics
@@ -517,29 +517,29 @@ kmodules.xyz/client-go/meta
 kmodules.xyz/client-go/tools/clientcmd
 kmodules.xyz/client-go/apiextensions/v1beta1
 kmodules.xyz/client-go
-# kmodules.xyz/custom-resources v0.0.0-20190723185639-711575c0b8a9
+# kmodules.xyz/custom-resources v0.0.0-20190802202832-aaad432d3364
 kmodules.xyz/custom-resources/client/clientset/versioned
 kmodules.xyz/custom-resources/client/clientset/versioned/typed/appcatalog/v1alpha1
 kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1
 kmodules.xyz/custom-resources/client/clientset/versioned/scheme
 kmodules.xyz/custom-resources/apis/appcatalog
-# kmodules.xyz/objectstore-api v0.0.0-20190718002052-da668b440b0b
+# kmodules.xyz/objectstore-api v0.0.0-20190802205146-9816ffafe0d7
 kmodules.xyz/objectstore-api/api/v1
-# kmodules.xyz/offshoot-api v0.0.0-20190715115723-36c8fce142c1
+# kmodules.xyz/offshoot-api v0.0.0-20190802203449-05938be4a23b
 kmodules.xyz/offshoot-api/api/v1
 kmodules.xyz/offshoot-api/util
-# kmodules.xyz/openshift v0.0.0-20190508141315-99ec9fc946bf
+# kmodules.xyz/openshift v0.0.0-20190802201709-f05cf11ae73e
 kmodules.xyz/openshift/client/clientset/versioned
 kmodules.xyz/openshift/client/clientset/versioned/typed/apps/v1
 kmodules.xyz/openshift/client/clientset/versioned/typed/security/v1
 kmodules.xyz/openshift/apis/apps/v1
 kmodules.xyz/openshift/client/clientset/versioned/scheme
 kmodules.xyz/openshift/apis/security/v1
-# kmodules.xyz/webhook-runtime v0.0.0-20190715115250-a84fbf77dd30
+# kmodules.xyz/webhook-runtime v0.0.0-20190802202019-9e77ee949266
 kmodules.xyz/webhook-runtime/apis/workload/v1
-# kubedb.dev/apimachinery v0.0.0-20190725064317-38d61431595b
+# kubedb.dev/apimachinery v0.13.0-rc.0.0.20190808091223-58fe1ccf1c97
 kubedb.dev/apimachinery/apis/config/v1alpha1
-kubedb.dev/apimachinery/apis/catalog
+kubedb.dev/apimachinery/apis/config
 # sigs.k8s.io/kustomize v2.0.3+incompatible
 sigs.k8s.io/kustomize/pkg/fs
 sigs.k8s.io/kustomize/pkg/commands/build
@@ -565,7 +565,7 @@ sigs.k8s.io/kustomize/pkg/expansion
 sigs.k8s.io/kustomize/pkg/transformers/config/defaultconfig
 # sigs.k8s.io/yaml v1.1.0
 sigs.k8s.io/yaml
-# stash.appscode.dev/stash v0.0.0-20190731132032-0517a6fd8305
+# stash.appscode.dev/stash v0.9.0-rc.0
 stash.appscode.dev/stash/client/clientset/versioned/fake
 stash.appscode.dev/stash/apis
 stash.appscode.dev/stash/client/clientset/versioned/scheme
