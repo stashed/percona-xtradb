@@ -30,8 +30,6 @@ const (
 	mySqlRestoreCMD  = "mysql"
 	envMySqlPassword = "MYSQL_PWD"
 	defaultDumpArgs  = "--all-databases"
-
-	socatRertyVal = 30
 )
 
 func NewCmdBackup() *cobra.Command {
@@ -138,6 +136,7 @@ func NewCmdBackup() *cobra.Command {
 					kubedbconfig_api.GarbdListenPort,
 					kubedbconfig_api.GarbdXtrabackupSSTRequestSuffix,
 				)
+
 				backupOpt.StdinPipeCommand = restic.Command{
 					Name: "bash",
 					Args: []interface{}{
@@ -177,7 +176,7 @@ func NewCmdBackup() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&dumpArgs, "xtradb-args", defaultDumpArgs, "Additional arguments")
-	cmd.Flags().Int32Var(&socatRetry, "socat-retry", socatRertyVal, "Additional arguments")
+	cmd.Flags().Int32Var(&socatRetry, "socat-retry", kubedbconfig_api.SOCATOptionRetry, "Additional arguments")
 
 	cmd.Flags().StringVar(&masterURL, "master", masterURL, "The address of the Kubernetes API server (overrides any value in kubeconfig)")
 	cmd.Flags().StringVar(&kubeconfigPath, "kubeconfig", kubeconfigPath, "Path to kubeconfig file with authorization information (the master location is set by the master flag).")

@@ -20,7 +20,7 @@ spec:
   - --max-connections=${MAX_CONNECTIONS:=0} # 0 indicates use default connection limit
   - --hostname=${HOSTNAME:=}
   - --xtradb-args=${xtradbArgs:={{ .Values.backup.xtradbArgs }}} # optional arguments pass to mysqldump command
-  - --socat-retry=${socatRetry:={{ .Values.backup.socatRetry }}} # optional arguments pass to mysqldump command
+  - --socat-retry=${socatRetry:={{ .Values.backup.socatRetry }}} # optional argument to send backup script
   # target information
   - --namespace=${NAMESPACE:=default}
   - --app-binding=${TARGET_NAME:=}

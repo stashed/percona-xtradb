@@ -584,6 +584,7 @@ k8s.io/kubernetes v1.14.0 h1:6T2iAEoOYQnzQb3WvPlUkcczEEXZ7+YPlAO8olwujRw=
 k8s.io/kubernetes v1.14.0/go.mod h1:ocZa8+6APFNC2tX1DZASIbocyYT5jHzqFVsY5aoB7Jk=
 k8s.io/utils v0.0.0-20190221042446-c2654d5206da h1:ElyM7RPonbKnQqOcw7dG2IK5uvQQn3b/WPHqD5mBvP4=
 k8s.io/utils v0.0.0-20190221042446-c2654d5206da/go.mod h1:8k8uAuAQ0rXslZKaEWd0c3oVhZz7sSzSiPnVZayjIX0=
+<<<<<<< HEAD
 kmodules.xyz/client-go v0.0.0-20190808141354-bbb9e14f60ab h1:rnKcFaDLtqpdooase2BqPfHV9Mu1WvzbTUmucnJjLio=
 kmodules.xyz/client-go v0.0.0-20190808141354-bbb9e14f60ab/go.mod h1:1GI6h5D31op/2D+Hrn9DhXW6iUd5wsHBQRoLeY7fndM=
 kmodules.xyz/custom-resources v0.0.0-20190808144301-114abf10dfe2 h1:u0zEFCvAttk09O64UzY1DVXNke9uAANmf4vllnVquS8=
@@ -601,6 +602,28 @@ kubedb.dev/apimachinery v0.13.0-rc.0 h1:bsVHuz0ZSR1Hf/e7BAMttH1B0YnuV6Z1sGapuD7f
 kubedb.dev/apimachinery v0.13.0-rc.0/go.mod h1:aW9ZyAPYmxM/t9LxtS9H26Ci2bw0qOYlSDHJPuh6lpM=
 labix.org/v2/mgo v0.0.0-20140701140051-000000000287/go.mod h1:Lg7AYkt1uXJoR9oeSZ3W/8IXLdvOfIITgZnommstyz4=
 launchpad.net/gocheck v0.0.0-20140225173054-000000000087/go.mod h1:hj7XX3B/0A+80Vse0e+BUHsHMTEhd0O4cpUHr/e/BUM=
+=======
+kmodules.xyz/client-go v0.0.0-20190715080709-7162a6c90b04 h1:17h0mshnlihkZMP6LqMmpliCQIknKasjdNGWyZCCmV4=
+kmodules.xyz/client-go v0.0.0-20190715080709-7162a6c90b04/go.mod h1:3h1/ZglH6fV2uv3p9AB1JnHUknhWniShJ7fBJfSf7Js=
+kmodules.xyz/client-go v0.0.0-20190802200916-043217632b6a h1:Tkg0QgQUPs6PamZHs97wr1VMZtHplPAGPCBpkNmqUdY=
+kmodules.xyz/client-go v0.0.0-20190802200916-043217632b6a/go.mod h1:j8CanEoQaOFiM+1Ulap3b5Td2rdcz6JdLjhS5mCfAOw=
+kmodules.xyz/custom-resources v0.0.0-20190802202832-aaad432d3364 h1:exihrvNKxdQf62/wi1tXr28H8r2Q1WUrB2kFrwmePqE=
+kmodules.xyz/custom-resources v0.0.0-20190802202832-aaad432d3364/go.mod h1:Wt1/RWFOtpZ1/s1M+oSUhE6u9+iWe0sj8yfpcjgeeS4=
+kmodules.xyz/monitoring-agent-api v0.0.0-20190802203207-a87aa5b2e057/go.mod h1:VAL+i2u/HGd/7heWB61IC/X4tHoCuo6pHV3FnujO2bY=
+kmodules.xyz/objectstore-api v0.0.0-20190802205146-9816ffafe0d7 h1:XMc6O4xuDx0+zfY5rwTWsX5TVUiWBIClIIY2+VOFWNY=
+kmodules.xyz/objectstore-api v0.0.0-20190802205146-9816ffafe0d7/go.mod h1:kOL4CYuxMKEfVsTlbKYsO/y50Aecm5zdpRsjGHyAEX4=
+kmodules.xyz/offshoot-api v0.0.0-20190802203449-05938be4a23b h1:gPPStN8DztuJDfKdAT5eU1b4dJMIdTrOQF4g+NWBnBg=
+kmodules.xyz/offshoot-api v0.0.0-20190802203449-05938be4a23b/go.mod h1:sLYv8XH9ffpEHOxfxvyR8VORaoyajbOyRc9O10e+rxg=
+kmodules.xyz/openshift v0.0.0-20190802201709-f05cf11ae73e h1:PIgJaW8SNH0nl3WxMk3ykq1UGpziPbjVqBCTe3zWa7I=
+kmodules.xyz/openshift v0.0.0-20190802201709-f05cf11ae73e/go.mod h1:Jd4Y4BTn9MHJcYkQRRqQxCg75ETFFHNHAGWFvSNwpDk=
+kmodules.xyz/webhook-runtime v0.0.0-20190802202019-9e77ee949266 h1:lYDShOkpEwMDlZwkOLTKiSt+0PiTLYH8D3BDsDLsF9E=
+kmodules.xyz/webhook-runtime v0.0.0-20190802202019-9e77ee949266/go.mod h1:asvHdlCuBqzSiDWcYxeGZOG7Wx1wpmLl2lqAIJOOric=
+kubedb.dev/apimachinery v0.0.0-20190809070454-182a04712624 h1:7LbZ+0iGhnSb3dVAfVx67iN6pM6G2Lz0TLpBH6T2zV8=
+kubedb.dev/apimachinery v0.0.0-20190809070454-182a04712624/go.mod h1:zvfCeKFv/9KYd6cDY18D58LdwCP0cwFKGAfg1UOKpK8=
+pack.ag/amqp v0.8.0/go.mod h1:4/cbmt4EJXSKlG6LCfWHoqmN0uFdy5i/+YFz+fTfhV4=
+pack.ag/amqp v0.11.0/go.mod h1:4/cbmt4EJXSKlG6LCfWHoqmN0uFdy5i/+YFz+fTfhV4=
+rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
+>>>>>>> Some changes
 sigs.k8s.io/kustomize v2.0.3+incompatible h1:JUufWFNlI44MdtnjUqVnvh29rR37PQFzPbLXqhyOyX0=
 sigs.k8s.io/kustomize v2.0.3+incompatible/go.mod h1:MkjgH3RdOWrievjo6c9T245dYlB5QeXV4WCbnt/PEpU=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190302045857-e85c7b244fd2/go.mod h1:wWxsB5ozmmv/SG7nM11ayaAW51xMvak/t1r0CSlcokI=

@@ -526,7 +526,11 @@ kmodules.xyz/openshift/client/clientset/versioned/scheme
 kmodules.xyz/openshift/apis/security/v1
 # kmodules.xyz/webhook-runtime v0.0.0-20190808145328-4186c470d56b
 kmodules.xyz/webhook-runtime/apis/workload/v1
+<<<<<<< HEAD
 # kubedb.dev/apimachinery v0.13.0-rc.0
+=======
+# kubedb.dev/apimachinery v0.0.0-20190809070454-182a04712624
+>>>>>>> Some changes
 kubedb.dev/apimachinery/apis/config/v1alpha1
 kubedb.dev/apimachinery/apis/config
 # sigs.k8s.io/kustomize v2.0.3+incompatible
