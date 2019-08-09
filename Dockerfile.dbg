@@ -19,6 +19,28 @@ RUN set -x                                                                      
 
 FROM {ARG_FROM}
 
+RUN set -e; \
+  apt-get update; \
+  apt-get install --no-install-recommends --yes \
+    apt-transport-https \
+    ca-certificates pwgen wget netcat socat \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN wget https://repo.percona.com/apt/percona-release_0.1-6.jessie_all.deb \
+  && dpkg -i percona-release_0.1-6.jessie_all.deb
+
+RUN apt-get update \
+  && apt-get install --no-install-recommends --yes \
+  percona-xtrabackup-24 percona-xtradb-cluster-garbd-5.7 \
+  qpress \
+  && rm -rf /var/lib/apt/lists/* \
+  && rm percona-release_0.1-6.jessie_all.deb
+
+COPY hack/docker/stash-percona-xtradb/ /
+
+RUN chmod +x /backup.sh \
+  && chmod +x /restore.sh
+
 COPY --from=0 restic_{NEW_RESTIC_VER} /bin/restic_{NEW_RESTIC_VER}
 COPY bin/{ARG_OS}_{ARG_ARCH}/{ARG_BIN} /{ARG_BIN}
 

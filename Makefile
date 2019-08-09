@@ -1,11 +1,11 @@
 SHELL=/bin/bash -o pipefail
 
 # The binary to build (just the basename).
-BIN      := percona-xtradb-stash
+BIN      := stash-percona-xtradb
 COMPRESS ?= no
 
 # Where to push the docker image.
-REGISTRY ?= appscode
+REGISTRY ?= stashed
 
 # This version-strategy uses git tags to set the version string
 git_branch       := $(shell git rev-parse --abbrev-ref HEAD)
@@ -44,8 +44,8 @@ BIN_PLATFORMS    := $(DOCKER_PLATFORMS)
 OS   := $(if $(GOOS),$(GOOS),$(shell go env GOOS))
 ARCH := $(if $(GOARCH),$(GOARCH),$(shell go env GOARCH))
 
-BASEIMAGE_PROD   ?= percona/percona-xtradb-cluster:5.7.25
-BASEIMAGE_DBG    ?= percona/percona-xtradb-cluster:5.7.25
+BASEIMAGE_PROD   ?= debian:jessie
+BASEIMAGE_DBG    ?= debian:jessie
 
 IMAGE            := $(REGISTRY)/$(BIN)
 VERSION_PROD     := $(VERSION)
@@ -188,7 +188,7 @@ bin/.container-$(DOTFILE_IMAGE)-%: bin/$(OS)_$(ARCH)/$(BIN) $(DOCKERFILE_%)
 	    -e 's|{RESTIC_VER}|$(RESTIC_VER)|g'         \
 	    -e 's|{NEW_RESTIC_VER}|$(NEW_RESTIC_VER)|g' \
 	    $(DOCKERFILE_$*) > bin/.dockerfile-$*-$(OS)_$(ARCH)
-	@docker build -t $(IMAGE):$(TAG_$*) -f bin/.dockerfile-$*-$(OS)_$(ARCH) .
+	@DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform $(OS)/$(ARCH) --load --pull -t $(IMAGE):$(TAG_$*) -f bin/.dockerfile-$*-$(OS)_$(ARCH) .
 	@docker images -q $(IMAGE):$(TAG_$*) > $@
 	@echo
 

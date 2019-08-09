@@ -1,6 +1,8 @@
 package pkg
 
 import (
+	"encoding/json"
+	"fmt"
 	"path/filepath"
 
 	"github.com/appscode/go/flags"
@@ -10,18 +12,24 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	appcatalog_cs "kmodules.xyz/custom-resources/client/clientset/versioned"
+	kubedbconfig_api "kubedb.dev/apimachinery/apis/config/v1alpha1"
 	"stash.appscode.dev/stash/pkg/restic"
 	"stash.appscode.dev/stash/pkg/util"
 )
 
 const (
-	JobMySqlBackup   = "stash-xtradb-backup"
-	MySqlUser        = "username"
-	MySqlPassword    = "password"
-	MySqlDumpFile    = "dumpfile.sql"
-	MySqlDumpCMD     = "xtradbdump"
-	MySqlRestoreCMD  = "xtradb"
-	EnvMySqlPassword = "MYSQL_PWD"
+	jobMySqlBackup = "stash-xtradb-backup"
+
+	mySqlUser     = "username"
+	mySqlPassword = "password"
+
+	mySqlDumpFile        = "dumpfile.sql"
+	xtraBackupStreamFile = "xtrabackup.stream"
+
+	mySqlDumpCMD     = "mysqldump"
+	mySqlRestoreCMD  = "mysql"
+	envMySqlPassword = "MYSQL_PWD"
+	defaultDumpArgs  = "--all-databases"
 )
 
 func NewCmdBackup() *cobra.Command {
@@ -31,22 +39,24 @@ func NewCmdBackup() *cobra.Command {
 		namespace      string
 		appBindingName string
 		outputDir      string
-		xtradbArgs     = "--all-databases"
-		setupOpt       = restic.SetupOptions{
+		dumpArgs       string
+		garbdCnf       kubedbconfig_api.GaleraArbitratorConfiguration
+		socatRetry     int32
+
+		setupOpt = restic.SetupOptions{
 			ScratchDir:  restic.DefaultScratchDir,
 			EnableCache: false,
 		}
 		backupOpt = restic.BackupOptions{
-			Host:          restic.DefaultHost,
-			StdinFileName: MySqlDumpFile,
+			Host: restic.DefaultHost,
 		}
 		metrics = restic.MetricsOptions{
-			JobName: JobMySqlBackup,
+			JobName: jobMySqlBackup,
 		}
 	)
 
 	cmd := &cobra.Command{
-		Use:               "backup-xtradb",
+		Use:               "backup-percona-xtradb",
 		Short:             "Takes a backup of XtraDB DB",
 		DisableAutoGenTag: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -88,24 +98,58 @@ func NewCmdBackup() *cobra.Command {
 				return err
 			}
 
+			// galera arbitrator config
+			if appBinding.Spec.Parameters != nil {
+				err = json.Unmarshal(appBinding.Spec.Parameters.Raw, &garbdCnf)
+				if err != nil {
+					return err
+				}
+			}
+
 			// init restic wrapper
 			resticWrapper, err := restic.NewResticWrapper(setupOpt)
 			if err != nil {
 				return err
 			}
 
-			// set env for xtradbdump
-			resticWrapper.SetEnv(EnvMySqlPassword, string(appBindingSecret.Data[MySqlPassword]))
-			// setup pipe command
-			backupOpt.StdinPipeCommand = restic.Command{
-				Name: MySqlDumpCMD,
-				Args: []interface{}{
-					"-u", string(appBindingSecret.Data[MySqlUser]),
-					"-h", appBinding.Spec.ClientConfig.Service.Name,
-				},
-			}
-			if xtradbArgs != "" {
-				backupOpt.StdinPipeCommand.Args = append(backupOpt.StdinPipeCommand.Args, xtradbArgs)
+			if garbdCnf.Group == "" { // standalone database
+				backupOpt.StdinFileName = mySqlDumpFile
+
+				// set env for mysqlbdump
+				resticWrapper.SetEnv(envMySqlPassword, string(appBindingSecret.Data[mySqlPassword]))
+				// setup pipe command
+				backupOpt.StdinPipeCommand = restic.Command{
+					Name: mySqlDumpCMD,
+					Args: []interface{}{
+						"-u", string(appBindingSecret.Data[mySqlUser]),
+						"-h", appBinding.Spec.ClientConfig.Service.Name,
+					},
+				}
+				if dumpArgs != "" {
+					backupOpt.StdinPipeCommand.Args = append(backupOpt.StdinPipeCommand.Args, dumpArgs)
+				}
+			} else { // clustered database
+				backupOpt.StdinFileName = xtraBackupStreamFile
+
+				sstRequestOpts := fmt.Sprintf("%s,%d,%s",
+					garbdCnf.SSTMethod,
+					kubedbconfig_api.GarbdListenPort,
+					kubedbconfig_api.GarbdXtrabackupSSTRequestSuffix,
+				)
+
+				backupOpt.StdinPipeCommand = restic.Command{
+					Name: "bash",
+					Args: []interface{}{
+						"-c",
+						fmt.Sprintf("/backup.sh %s %s %s %s %s",
+							garbdCnf.ClusterAddressWithListenOption(),
+							garbdCnf.Group,
+							sstRequestOpts,
+							kubedbconfig_api.GarbdLogFile,
+							kubedbconfig_api.SOCATOption(socatRetry),
+						),
+					},
+				}
 			}
 
 			// wait for DB ready
@@ -131,7 +175,8 @@ func NewCmdBackup() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&xtradbArgs, "xtradb-args", xtradbArgs, "Additional arguments")
+	cmd.Flags().StringVar(&dumpArgs, "xtradb-args", defaultDumpArgs, "Additional arguments")
+	cmd.Flags().Int32Var(&socatRetry, "socat-retry", kubedbconfig_api.SOCATOptionRetry, "Additional arguments")
 
 	cmd.Flags().StringVar(&masterURL, "master", masterURL, "The address of the Kubernetes API server (overrides any value in kubeconfig)")
 	cmd.Flags().StringVar(&kubeconfigPath, "kubeconfig", kubeconfigPath, "Path to kubeconfig file with authorization information (the master location is set by the master flag).")

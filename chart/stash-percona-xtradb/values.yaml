@@ -1,0 +1,25 @@
+# Default values for stash-percona-xtradb.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+# we are declaring these values as global so that parent chart can overwrite them
+docker:
+  registry: appscode
+  image: stash-percona-xtradb
+  tag: 5.7
+
+backup:
+  # optional argument to send mysqldump or mysql command
+  xtradbArgs: ""
+  # optional argument to send backup script
+  socatRetry: 30
+
+restore:
+  xtradbArgs: ""
+  targetAppReplicas: 1
+
+# default values for prometheus metrics
+metrics:
+  enabled: true
+  labels: []
