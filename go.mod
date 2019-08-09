@@ -3,31 +3,13 @@ module stash.appscode.dev/percona-xtradb
 go 1.12
 
 require (
-	contrib.go.opencensus.io/exporter/ocagent v0.4.12 // indirect
-	github.com/Azure/azure-pipeline-go v0.1.9 // indirect
-	github.com/Azure/azure-storage-blob-go v0.6.0 // indirect
-	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/appscode/go v0.0.0-20190808133642-1d4ef1f1c1e0
-	github.com/dnaeon/go-vcr v1.0.1 // indirect
-	github.com/docker/distribution v2.7.1+incompatible // indirect
-	github.com/go-ini/ini v1.25.4 // indirect
-	github.com/go-openapi/swag v0.19.0 // indirect
-	github.com/go-sql-driver/mysql v1.4.1 // indirect
-	github.com/golang/snappy v0.0.1 // indirect
-	github.com/google/martian v2.1.1-0.20190517191504-25dcb96d9e51+incompatible // indirect
-	github.com/imdario/mergo v0.3.7 // indirect
-	github.com/jackc/pgx v3.3.0+incompatible // indirect
-	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
-	github.com/lib/pq v1.1.0 // indirect
-	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983 // indirect
 	github.com/spf13/cobra v0.0.5
 	k8s.io/apimachinery v0.0.0-20190508063446-a3da69d3723c
-	k8s.io/cli-runtime v0.0.0-20190516231937-17bc0b7fcef5 // indirect
 	k8s.io/client-go v11.0.0+incompatible
-	k8s.io/component-base v0.0.0-20190424053038-9fe063da3132 // indirect
 	kmodules.xyz/client-go v0.0.0-20190808141354-bbb9e14f60ab
 	kmodules.xyz/custom-resources v0.0.0-20190808144301-114abf10dfe2
-	kubedb.dev/apimachinery v0.13.0-rc.0.0.20190809094618-4a30bdd03738
+	kubedb.dev/apimachinery v0.13.0-rc.0
 	stash.appscode.dev/stash v0.9.0-rc.0
 )
 
