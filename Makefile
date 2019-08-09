@@ -44,8 +44,8 @@ BIN_PLATFORMS    := $(DOCKER_PLATFORMS)
 OS   := $(if $(GOOS),$(GOOS),$(shell go env GOOS))
 ARCH := $(if $(GOARCH),$(GOARCH),$(shell go env GOARCH))
 
-BASEIMAGE_PROD   ?= alittleprogramming/pxb-24-test:t1
-BASEIMAGE_DBG    ?= alittleprogramming/pxb-24-test:t1
+BASEIMAGE_PROD   ?= debian:jessie
+BASEIMAGE_DBG    ?= debian:jessie
 
 IMAGE            := $(REGISTRY)/$(BIN)
 VERSION_PROD     := $(VERSION)
