@@ -36,7 +36,7 @@ func NewCmdRestore() *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:               "restore-perconaxtradb",
+		Use:               "restore-percona-xtradb",
 		Short:             "Restores XtraDB DB Backup",
 		DisableAutoGenTag: true,
 		RunE: func(cmd *cobra.Command, args []string) error {

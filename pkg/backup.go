@@ -58,7 +58,7 @@ func NewCmdBackup() *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:               "backup-perconaxtradb",
+		Use:               "backup-percona-xtradb",
 		Short:             "Takes a backup of XtraDB DB",
 		DisableAutoGenTag: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
