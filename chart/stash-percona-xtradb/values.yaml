@@ -18,8 +18,3 @@ backup:
 restore:
   xtradbArgs: ""
   targetAppReplicas: 1
-
-# default values for prometheus metrics
-metrics:
-  enabled: true
-  labels: []

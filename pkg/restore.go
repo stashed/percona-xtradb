@@ -6,32 +6,26 @@ import (
 	"github.com/appscode/go/flags"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	appcatalog_cs "kmodules.xyz/custom-resources/client/clientset/versioned"
+	api_v1beta1 "stash.appscode.dev/stash/apis/stash/v1beta1"
 	"stash.appscode.dev/stash/pkg/restic"
 	"stash.appscode.dev/stash/pkg/util"
 )
 
 func NewCmdRestore() *cobra.Command {
 	var (
-		masterURL         string
-		kubeconfigPath    string
-		namespace         string
-		appBindingName    string
-		outputDir         string
-		mysqlArgs         string
-		targetAppReplicas int32
-		setupOpt          = restic.SetupOptions{
-			ScratchDir:  restic.DefaultScratchDir,
-			EnableCache: false,
-		}
-		dumpOpt = restic.DumpOptions{
-			Host: restic.DefaultHost,
-		}
-		metrics = restic.MetricsOptions{
-			JobName: jobMySqlBackup,
+		masterURL      string
+		kubeconfigPath string
+		opt            = perconaOptions{
+			setupOptions: restic.SetupOptions{
+				ScratchDir:  restic.DefaultScratchDir,
+				EnableCache: false,
+			},
+			dumpOptions: restic.DumpOptions{
+				Host: restic.DefaultHost,
+			},
 		}
 	)
 
@@ -40,134 +34,135 @@ func NewCmdRestore() *cobra.Command {
 		Short:             "Restores XtraDB DB Backup",
 		DisableAutoGenTag: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			flags.EnsureRequiredFlags(cmd, "app-binding", "provider", "secret-dir")
-
-			// apply nice, ionice settings from env
-			var err error
-			setupOpt.Nice, err = util.NiceSettingsFromEnv()
-			if err != nil {
-				return util.HandleResticError(outputDir, restic.DefaultOutputFileName, err)
-			}
-			setupOpt.IONice, err = util.IONiceSettingsFromEnv()
-			if err != nil {
-				return util.HandleResticError(outputDir, restic.DefaultOutputFileName, err)
-			}
+			flags.EnsureRequiredFlags(cmd, "appbinding", "provider", "secret-dir")
 
 			// prepare client
 			config, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfigPath)
 			if err != nil {
 				return err
 			}
-			kubeClient, err := kubernetes.NewForConfig(config)
+			opt.kubeClient, err = kubernetes.NewForConfig(config)
 			if err != nil {
 				return err
 			}
-			appCatalogClient, err := appcatalog_cs.NewForConfig(config)
-			if err != nil {
-				return err
-			}
-
-			// init restic wrapper
-			resticWrapper, err := restic.NewResticWrapper(setupOpt)
+			opt.catalogClient, err = appcatalog_cs.NewForConfig(config)
 			if err != nil {
 				return err
 			}
 
-			if targetAppReplicas == 1 {
-				// get app binding
-				appBinding, err := appCatalogClient.AppcatalogV1alpha1().AppBindings(namespace).Get(appBindingName, metav1.GetOptions{})
-				if err != nil {
-					return err
-				}
-				// get secret
-				appBindingSecret, err := kubeClient.CoreV1().Secrets(namespace).Get(appBinding.Spec.Secret.Name, metav1.GetOptions{})
-				if err != nil {
-					return err
-				}
-
-				// set env for mysql
-				resticWrapper.SetEnv(envMySqlPassword, string(appBindingSecret.Data[mySqlPassword]))
-
-				// set backed up file name
-				dumpOpt.FileName = mySqlDumpFile
-
-				// setup pipe command
-				dumpOpt.StdoutPipeCommand = restic.Command{
-					Name: mySqlRestoreCMD,
-					Args: []interface{}{
-						"-u", string(appBindingSecret.Data[mySqlUser]),
-						"-h", appBinding.Spec.ClientConfig.Service.Name,
+			var restoreOutput *restic.RestoreOutput
+			restoreOutput, err = opt.restorePerconaXtraDB()
+			if err != nil {
+				restoreOutput = &restic.RestoreOutput{
+					HostRestoreStats: []api_v1beta1.HostRestoreStats{
+						{
+							Hostname: opt.dumpOptions.Host,
+							Phase:    api_v1beta1.HostRestoreFailed,
+							Error:    err.Error(),
+						},
 					},
-				}
-				if mysqlArgs != "" {
-					dumpOpt.StdoutPipeCommand.Args = append(dumpOpt.StdoutPipeCommand.Args, mysqlArgs)
-				}
-
-				// wait for DB ready
-				waitForDBReady(appBinding.Spec.ClientConfig.Service.Name, appBinding.Spec.ClientConfig.Service.Port)
-			} else {
-				// set backed up file name
-				dumpOpt.FileName = xtraBackupStreamFile
-
-				// setup pipe command
-				dumpOpt.StdoutPipeCommand = restic.Command{
-					Name: "bash",
-					Args: []interface{}{
-						"-c",
-						"/restore.sh /var/lib/mysql",
-					},
-				}
-			}
-
-			// Run dump
-			restore, restoreErr := resticWrapper.Dump(dumpOpt)
-			// If metrics are enabled then generate metrics
-			if metrics.Enabled {
-				err := restore.HandleMetrics(&metrics, restoreErr)
-				if err != nil {
-					return errors.NewAggregate([]error{restoreErr, err})
 				}
 			}
 			// If output directory specified, then write the output in "output.json" file in the specified directory
-			if restoreErr == nil && outputDir != "" {
-				err := restore.WriteOutput(filepath.Join(outputDir, restic.DefaultOutputFileName))
-				if err != nil {
-					return err
-				}
+			if opt.outputDir != "" {
+				return restoreOutput.WriteOutput(filepath.Join(opt.outputDir, restic.DefaultOutputFileName))
 			}
-			return restoreErr
+
+			return nil
 		},
 	}
 
-	cmd.Flags().StringVar(&mysqlArgs, "xtradb-args", mysqlArgs, "Additional arguments")
-	cmd.Flags().Int32Var(&targetAppReplicas, "target-app-replicas", targetAppReplicas, "Additional arguments")
+	cmd.Flags().StringVar(&opt.mysqlArgs, "xtradb-args", opt.mysqlArgs, "Additional arguments")
+	cmd.Flags().Int32Var(&opt.targetAppReplicas, "target-app-replicas", opt.targetAppReplicas, "Additional arguments")
 
 	cmd.Flags().StringVar(&masterURL, "master", masterURL, "The address of the Kubernetes API server (overrides any value in kubeconfig)")
 	cmd.Flags().StringVar(&kubeconfigPath, "kubeconfig", kubeconfigPath, "Path to kubeconfig file with authorization information (the master location is set by the master flag).")
-	cmd.Flags().StringVar(&namespace, "namespace", "default", "Namespace of Backup/Restore Session")
-	cmd.Flags().StringVar(&appBindingName, "app-binding", appBindingName, "Name of the app binding")
+	cmd.Flags().StringVar(&opt.namespace, "namespace", "default", "Namespace of Backup/Restore Session")
+	cmd.Flags().StringVar(&opt.appBindingName, "appbinding", opt.appBindingName, "Name of the app binding")
 
-	cmd.Flags().StringVar(&setupOpt.Provider, "provider", setupOpt.Provider, "Backend provider (i.e. gcs, s3, azure etc)")
-	cmd.Flags().StringVar(&setupOpt.Bucket, "bucket", setupOpt.Bucket, "Name of the cloud bucket/container (keep empty for local backend)")
-	cmd.Flags().StringVar(&setupOpt.Endpoint, "endpoint", setupOpt.Endpoint, "Endpoint for s3/s3 compatible backend")
-	cmd.Flags().StringVar(&setupOpt.URL, "rest-server-url", setupOpt.URL, "URL for rest backend")
-	cmd.Flags().StringVar(&setupOpt.Path, "path", setupOpt.Path, "Directory inside the bucket where backup will be stored")
-	cmd.Flags().StringVar(&setupOpt.SecretDir, "secret-dir", setupOpt.SecretDir, "Directory where storage secret has been mounted")
-	cmd.Flags().StringVar(&setupOpt.ScratchDir, "scratch-dir", setupOpt.ScratchDir, "Temporary directory")
-	cmd.Flags().BoolVar(&setupOpt.EnableCache, "enable-cache", setupOpt.EnableCache, "Specify whether to enable caching for restic")
-	cmd.Flags().IntVar(&setupOpt.MaxConnections, "max-connections", setupOpt.MaxConnections, "Specify maximum concurrent connections for GCS, Azure and B2 backend")
+	cmd.Flags().StringVar(&opt.setupOptions.Provider, "provider", opt.setupOptions.Provider, "Backend provider (i.e. gcs, s3, azure etc)")
+	cmd.Flags().StringVar(&opt.setupOptions.Bucket, "bucket", opt.setupOptions.Bucket, "Name of the cloud bucket/container (keep empty for local backend)")
+	cmd.Flags().StringVar(&opt.setupOptions.Endpoint, "endpoint", opt.setupOptions.Endpoint, "Endpoint for s3/s3 compatible backend or REST server URL")
+	cmd.Flags().StringVar(&opt.setupOptions.Path, "path", opt.setupOptions.Path, "Directory inside the bucket where backup will be stored")
+	cmd.Flags().StringVar(&opt.setupOptions.SecretDir, "secret-dir", opt.setupOptions.SecretDir, "Directory where storage secret has been mounted")
+	cmd.Flags().StringVar(&opt.setupOptions.ScratchDir, "scratch-dir", opt.setupOptions.ScratchDir, "Temporary directory")
+	cmd.Flags().BoolVar(&opt.setupOptions.EnableCache, "enable-cache", opt.setupOptions.EnableCache, "Specify whether to enable caching for restic")
+	cmd.Flags().IntVar(&opt.setupOptions.MaxConnections, "max-connections", opt.setupOptions.MaxConnections, "Specify maximum concurrent connections for GCS, Azure and B2 backend")
 
-	cmd.Flags().StringVar(&dumpOpt.Host, "hostname", dumpOpt.Host, "Name of the host machine")
-	cmd.Flags().StringVar(&dumpOpt.SourceHost, "source-hostname", dumpOpt.SourceHost, "Name of the host from where data will be restored")
+	cmd.Flags().StringVar(&opt.dumpOptions.Host, "hostname", opt.dumpOptions.Host, "Name of the host machine")
+	cmd.Flags().StringVar(&opt.dumpOptions.SourceHost, "source-hostname", opt.dumpOptions.SourceHost, "Name of the host from where data will be restored")
 	// TODO: sliceVar
-	cmd.Flags().StringVar(&dumpOpt.Snapshot, "snapshot", dumpOpt.Snapshot, "Snapshot to dump")
+	cmd.Flags().StringVar(&opt.dumpOptions.Snapshot, "snapshot", opt.dumpOptions.Snapshot, "Snapshot to dump")
 
-	cmd.Flags().StringVar(&outputDir, "output-dir", outputDir, "Directory where output.json file will be written (keep empty if you don't need to write output in file)")
-
-	cmd.Flags().BoolVar(&metrics.Enabled, "metrics-enabled", metrics.Enabled, "Specify whether to export Prometheus metrics")
-	cmd.Flags().StringVar(&metrics.PushgatewayURL, "metrics-pushgateway-url", metrics.PushgatewayURL, "Pushgateway URL where the metrics will be pushed")
-	cmd.Flags().StringVar(&metrics.MetricFileDir, "metrics-dir", metrics.MetricFileDir, "Directory where to write metric.prom file (keep empty if you don't want to write metric in a text file)")
-	cmd.Flags().StringSliceVar(&metrics.Labels, "metrics-labels", metrics.Labels, "Labels to apply in exported metrics")
+	cmd.Flags().StringVar(&opt.outputDir, "output-dir", opt.outputDir, "Directory where output.json file will be written (keep empty if you don't need to write output in file)")
 
 	return cmd
+}
+
+func (opt *perconaOptions) restorePerconaXtraDB() (*restic.RestoreOutput, error) {
+	// apply nice, ionice settings from env
+	var err error
+	opt.setupOptions.Nice, err = util.NiceSettingsFromEnv()
+	if err != nil {
+		return nil, err
+	}
+	opt.setupOptions.IONice, err = util.IONiceSettingsFromEnv()
+	if err != nil {
+		return nil, err
+	}
+
+	// init restic wrapper
+	resticWrapper, err := restic.NewResticWrapper(opt.setupOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	if opt.targetAppReplicas == 1 {
+		// get app binding
+		appBinding, err := opt.catalogClient.AppcatalogV1alpha1().AppBindings(opt.namespace).Get(opt.appBindingName, metav1.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+		// get secret
+		appBindingSecret, err := opt.kubeClient.CoreV1().Secrets(opt.namespace).Get(appBinding.Spec.Secret.Name, metav1.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+
+		// set env for mysql
+		resticWrapper.SetEnv(envMySqlPassword, string(appBindingSecret.Data[mySqlPassword]))
+
+		// set backed up file name
+		opt.dumpOptions.FileName = mySqlDumpFile
+
+		// setup pipe command
+		opt.dumpOptions.StdoutPipeCommand = restic.Command{
+			Name: mySqlRestoreCMD,
+			Args: []interface{}{
+				"-u", string(appBindingSecret.Data[mySqlUser]),
+				"-h", appBinding.Spec.ClientConfig.Service.Name,
+			},
+		}
+		if opt.mysqlArgs != "" {
+			opt.dumpOptions.StdoutPipeCommand.Args = append(opt.dumpOptions.StdoutPipeCommand.Args, opt.mysqlArgs)
+		}
+
+		// wait for DB ready
+		waitForDBReady(appBinding.Spec.ClientConfig.Service.Name, appBinding.Spec.ClientConfig.Service.Port)
+	} else {
+		// set backed up file name
+		opt.dumpOptions.FileName = xtraBackupStreamFile
+
+		// setup pipe command
+		opt.dumpOptions.StdoutPipeCommand = restic.Command{
+			Name: "bash",
+			Args: []interface{}{
+				"-c",
+				"/restore.sh /var/lib/mysql",
+			},
+		}
+	}
+
+	// Run dump
+	return resticWrapper.Dump(opt.dumpOptions)
 }
