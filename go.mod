@@ -3,14 +3,14 @@ module stash.appscode.dev/percona-xtradb
 go 1.12
 
 require (
-	github.com/appscode/go v0.0.0-20190808133642-1d4ef1f1c1e0
+	github.com/appscode/go v0.0.0-20191016085057-e186b6c94a3b
 	github.com/spf13/cobra v0.0.5
 	k8s.io/apimachinery v0.0.0-20190508063446-a3da69d3723c
 	k8s.io/client-go v11.0.0+incompatible
-	kmodules.xyz/client-go v0.0.0-20190808141354-bbb9e14f60ab
-	kmodules.xyz/custom-resources v0.0.0-20190808144301-114abf10dfe2
-	kubedb.dev/apimachinery v0.13.0-rc.0.0.20190830121921-d28870c9d73a
-	stash.appscode.dev/stash v0.9.0-rc.0.0.20190910104640-5f49f5d214aa
+	kmodules.xyz/client-go v0.0.0-20191023042933-b12d1ccfaf57
+	kmodules.xyz/custom-resources v0.0.0-20190927035424-65fe358bb045
+	kubedb.dev/apimachinery v0.13.0-rc.2
+	stash.appscode.dev/stash v0.9.0-rc.2
 )
 
 replace (
@@ -28,6 +28,6 @@ replace (
 	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20190228160746-b3a7cee44a30
 	k8s.io/kubernetes => k8s.io/kubernetes v1.14.0
 	k8s.io/metrics => k8s.io/metrics v0.0.0-20190314001731-1bd6a4002213
-	k8s.io/utils => k8s.io/utils v0.0.0-20190221042446-c2654d5206da
+	k8s.io/utils => k8s.io/utils v0.0.0-20190514214443-0a167cbac756
 	sigs.k8s.io/structured-merge-diff => sigs.k8s.io/structured-merge-diff v0.0.0-20190302045857-e85c7b244fd2
 )

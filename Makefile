@@ -1,6 +1,22 @@
+# Copyright 2019 AppsCode Inc.
+# Copyright 2016 The Kubernetes Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 SHELL=/bin/bash -o pipefail
 
-# The binary to build (just the basename).
+GO_PKG   := stash.appscode.dev
+REPO     := $(notdir $(shell pwd))
 BIN      := stash-percona-xtradb
 COMPRESS ?= no
 
@@ -35,9 +51,10 @@ NEW_RESTIC_VER   := 0.9.5
 ### These variables should not need tweaking.
 ###
 
-SRC_DIRS := cmd pkg # directories which hold app source (not vendored)
+SRC_PKGS := cmd pkg
+SRC_DIRS := $(SRC_PKGS) # directories which hold app source (not vendored)
 
-DOCKER_PLATFORMS := linux/amd64 linux/arm linux/arm64
+DOCKER_PLATFORMS := linux/amd64 linux/arm64
 BIN_PLATFORMS    := $(DOCKER_PLATFORMS)
 
 # Used internally.  Users should pass GOOS and/or GOARCH.
@@ -54,7 +71,7 @@ TAG              := $(VERSION)_$(OS)_$(ARCH)
 TAG_PROD         := $(TAG)
 TAG_DBG          := $(VERSION)-dbg_$(OS)_$(ARCH)
 
-GO_VERSION       ?= 1.12.5
+GO_VERSION       ?= 1.12.12
 BUILD_IMAGE      ?= appscode/golang-dev:$(GO_VERSION)-stretch
 
 OUTBIN = bin/$(OS)_$(ARCH)/$(BIN)
@@ -65,7 +82,11 @@ endif
 # Directories that we need created to build/test.
 BUILD_DIRS  := bin/$(OS)_$(ARCH)     \
                .go/bin/$(OS)_$(ARCH) \
-               .go/cache
+               .go/cache             \
+               hack/config           \
+               $(HOME)/.credentials  \
+               $(HOME)/.kube         \
+               $(HOME)/.minikube
 
 DOCKERFILE_PROD  = Dockerfile.in
 DOCKERFILE_DBG   = Dockerfile.dbg
@@ -111,7 +132,7 @@ version:
 	@echo ::set-output name=commit_timestamp::$(commit_timestamp)
 
 gen:
-	./hack/codegen.sh
+	@true
 
 fmt: $(BUILD_DIRS)
 	@docker run                                                 \
@@ -126,7 +147,10 @@ fmt: $(BUILD_DIRS)
 	    --env HTTP_PROXY=$(HTTP_PROXY)                          \
 	    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
 	    $(BUILD_IMAGE)                                          \
-	    ./hack/fmt.sh $(SRC_DIRS)
+	    /bin/bash -c "                                          \
+	        REPO_PKG=$(GO_PKG)                                  \
+	        ./hack/fmt.sh $(SRC_DIRS)                           \
+	    "
 
 build: $(OUTBIN)
 
@@ -164,9 +188,21 @@ $(OUTBIN): .go/$(OUTBIN).stamp
 	        commit_timestamp=$(commit_timestamp)                \
 	        ./hack/build.sh                                     \
 	    "
-	@if [ $(COMPRESS) = yes ] && [ $(OS) != windows ]; then \
-		echo "compressing $(OUTBIN)";                       \
-		upx --brute .go/$(OUTBIN);                          \
+	@if [ $(COMPRESS) = yes ] && [ $(OS) != darwin ]; then          \
+		echo "compressing $(OUTBIN)";                               \
+		docker run                                                  \
+		    -i                                                      \
+		    --rm                                                    \
+		    -u $$(id -u):$$(id -g)                                  \
+		    -v $$(pwd):/src                                         \
+		    -w /src                                                 \
+		    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin                \
+		    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin/$(OS)_$(ARCH)  \
+		    -v $$(pwd)/.go/cache:/.cache                            \
+		    --env HTTP_PROXY=$(HTTP_PROXY)                          \
+		    --env HTTPS_PROXY=$(HTTPS_PROXY)                        \
+		    $(BUILD_IMAGE)                                          \
+		    upx --brute /go/$(OUTBIN);                              \
 	fi
 	@if ! cmp -s .go/$(OUTBIN) $(OUTBIN); then \
 	    mv .go/$(OUTBIN) $(OUTBIN);            \
@@ -181,13 +217,13 @@ container: bin/.container-$(DOTFILE_IMAGE)-PROD bin/.container-$(DOTFILE_IMAGE)-
 bin/.container-$(DOTFILE_IMAGE)-%: bin/$(OS)_$(ARCH)/$(BIN) $(DOCKERFILE_%)
 	@echo "container: $(IMAGE):$(TAG_$*)"
 	@sed                                            \
-	    -e 's|{ARG_BIN}|$(BIN)|g'                   \
-	    -e 's|{ARG_ARCH}|$(ARCH)|g'                 \
-	    -e 's|{ARG_OS}|$(OS)|g'                     \
-	    -e 's|{ARG_FROM}|$(BASEIMAGE_$*)|g'         \
-	    -e 's|{RESTIC_VER}|$(RESTIC_VER)|g'         \
-	    -e 's|{NEW_RESTIC_VER}|$(NEW_RESTIC_VER)|g' \
-	    $(DOCKERFILE_$*) > bin/.dockerfile-$*-$(OS)_$(ARCH)
+		-e 's|{ARG_BIN}|$(BIN)|g'                   \
+		-e 's|{ARG_ARCH}|$(ARCH)|g'                 \
+		-e 's|{ARG_OS}|$(OS)|g'                     \
+		-e 's|{ARG_FROM}|$(BASEIMAGE_$*)|g'         \
+		-e 's|{RESTIC_VER}|$(RESTIC_VER)|g'         \
+		-e 's|{NEW_RESTIC_VER}|$(NEW_RESTIC_VER)|g' \
+		$(DOCKERFILE_$*) > bin/.dockerfile-$*-$(OS)_$(ARCH)
 	@DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform $(OS)/$(ARCH) --load --pull -t $(IMAGE):$(TAG_$*) -f bin/.dockerfile-$*-$(OS)_$(ARCH) .
 	@docker images -q $(IMAGE):$(TAG_$*) > $@
 	@echo
@@ -204,7 +240,10 @@ docker-manifest-%:
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create -a $(IMAGE):$(VERSION_$*) $(foreach PLATFORM,$(DOCKER_PLATFORMS),$(IMAGE):$(VERSION_$*)_$(subst /,_,$(PLATFORM)))
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(IMAGE):$(VERSION_$*)
 
-test: $(BUILD_DIRS)
+.PHONY: test
+test: unit-tests
+
+unit-tests: $(BUILD_DIRS)
 	@docker run                                                 \
 	    -i                                                      \
 	    --rm                                                    \
@@ -243,7 +282,7 @@ lint: $(BUILD_DIRS)
 	    --env GO111MODULE=on                                    \
 	    --env GOFLAGS="-mod=vendor"                             \
 	    $(BUILD_IMAGE)                                          \
-	    golangci-lint run --enable $(ADDTL_LINTERS)
+	    golangci-lint run --enable $(ADDTL_LINTERS) --deadline=10m --skip-files="generated.*\.go$\" --skip-dirs-use-default
 
 $(BUILD_DIRS):
 	@mkdir -p $@
@@ -251,32 +290,49 @@ $(BUILD_DIRS):
 .PHONY: dev
 dev: gen fmt push
 
+.PHONY: verify
+verify: verify-modules verify-gen
+
+.PHONY: verify-modules
+verify-modules:
+	GO111MODULE=on go mod tidy
+	GO111MODULE=on go mod vendor
+	@if !(git diff --exit-code HEAD); then \
+		echo "go module files are out of date"; exit 1; \
+	fi
+
+.PHONY: verify-gen
+verify-gen: gen fmt
+	@if !(git diff --exit-code HEAD); then \
+		echo "files are out of date, run make gen fmt"; exit 1; \
+	fi
+
 .PHONY: ci
-ci: lint test build #cover
+ci: verify lint build unit-tests #cover
 
 .PHONY: qa
-qa: docker-manifest
+qa:
 	@if [ "$$APPSCODE_ENV" = "prod" ]; then                                              \
 		echo "Nothing to do in prod env. Are you trying to 'release' binaries to prod?"; \
 		exit 1;                                                                          \
 	fi
-	@if [ "$(version_strategy)" = "git_tag" ]; then           \
+	@if [ "$(version_strategy)" = "tag" ]; then               \
 		echo "Are you trying to 'release' binaries to prod?"; \
 		exit 1;                                               \
 	fi
-	@$(MAKE) clean all-push --no-print-directory
+	@$(MAKE) clean all-push docker-manifest --no-print-directory
 
 .PHONY: release
-release: docker-manifest
+release:
 	@if [ "$$APPSCODE_ENV" != "prod" ]; then      \
 		echo "'release' only works in PROD env."; \
 		exit 1;                                   \
 	fi
-	@if [ "$(version_strategy)" != "git_tag" ]; then                  \
-		echo "'apply_tag' to release binaries and/or docker images."; \
-		exit 1;                                                       \
+	@if [ "$(version_strategy)" != "tag" ]; then                    \
+		echo "apply tag to release binaries and/or docker images."; \
+		exit 1;                                                     \
 	fi
-	@$(MAKE) clean all-push --no-print-directory
+	@$(MAKE) clean all-push docker-manifest --no-print-directory
 
 .PHONY: clean
 clean:
