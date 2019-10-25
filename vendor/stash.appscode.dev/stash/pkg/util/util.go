@@ -7,6 +7,11 @@ import (
 	"strconv"
 	"strings"
 
+	"stash.appscode.dev/stash/apis"
+	api_v1beta1 "stash.appscode.dev/stash/apis/stash/v1beta1"
+	cs "stash.appscode.dev/stash/client/clientset/versioned"
+	"stash.appscode.dev/stash/pkg/restic"
+
 	"github.com/appscode/go/types"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
@@ -22,10 +27,6 @@ import (
 	v1 "kmodules.xyz/offshoot-api/api/v1"
 	oc_cs "kmodules.xyz/openshift/client/clientset/versioned"
 	wapi "kmodules.xyz/webhook-runtime/apis/workload/v1"
-	"stash.appscode.dev/stash/apis"
-	api_v1beta1 "stash.appscode.dev/stash/apis/stash/v1beta1"
-	cs "stash.appscode.dev/stash/client/clientset/versioned"
-	"stash.appscode.dev/stash/pkg/restic"
 )
 
 var (
@@ -36,6 +37,7 @@ const (
 	CallerWebhook       = "webhook"
 	CallerController    = "controller"
 	PushgatewayLocalURL = "http://localhost:56789"
+	DefaultHost         = "host-0"
 )
 
 type RepoLabelData struct {
@@ -50,21 +52,19 @@ func GetHostName(target interface{}) (string, error) {
 	// target nil for cluster backup
 	var targetRef api_v1beta1.TargetRef
 	if target == nil {
-		return "host-0", nil
+		return DefaultHost, nil
 	}
 
 	// read targetRef field from BackupTarget or RestoreTarget
-	switch target.(type) {
+	switch t := target.(type) {
 	case *api_v1beta1.BackupTarget:
-		t := target.(*api_v1beta1.BackupTarget)
 		if t == nil {
-			return "host-0", nil
+			return DefaultHost, nil
 		}
 		targetRef = t.Ref
 	case *api_v1beta1.RestoreTarget:
-		t := target.(*api_v1beta1.RestoreTarget)
 		if t == nil {
-			return "host-0", nil
+			return DefaultHost, nil
 		}
 
 		// if replicas or volumeClaimTemplate is specified then  restore is done via job.
@@ -101,7 +101,7 @@ func GetHostName(target interface{}) (string, error) {
 		}
 		return nodeName, nil
 	default:
-		return "host-0", nil
+		return DefaultHost, nil
 	}
 }
 
@@ -241,12 +241,14 @@ func AttachLocalBackend(podSpec core.PodSpec, localSpec store.LocalSpec) core.Po
 }
 
 func AttachPVC(podSpec core.PodSpec, volumes []core.Volume, volumeMounts []core.VolumeMount) core.PodSpec {
-	podSpec.Volumes = core_util.UpsertVolume(podSpec.Volumes, volumes...)
-	for i := range podSpec.InitContainers {
-		podSpec.InitContainers[i].VolumeMounts = core_util.UpsertVolumeMount(podSpec.InitContainers[i].VolumeMounts, volumeMounts...)
-	}
-	for i := range podSpec.Containers {
-		podSpec.Containers[i].VolumeMounts = core_util.UpsertVolumeMount(podSpec.Containers[i].VolumeMounts, volumeMounts...)
+	if len(volumeMounts) > 0 {
+		podSpec.Volumes = core_util.UpsertVolume(podSpec.Volumes, volumes...)
+		for i := range podSpec.InitContainers {
+			podSpec.InitContainers[i].VolumeMounts = core_util.UpsertVolumeMount(podSpec.InitContainers[i].VolumeMounts, volumeMounts...)
+		}
+		for i := range podSpec.Containers {
+			podSpec.Containers[i].VolumeMounts = core_util.UpsertVolumeMount(podSpec.Containers[i].VolumeMounts, volumeMounts...)
+		}
 	}
 	return podSpec
 }
@@ -409,4 +411,49 @@ func GetWorkloadReference(w *wapi.Workload) (*core.ObjectReference, error) {
 		}, nil
 	}
 	return ref, err
+}
+
+// UpsertInterimVolume create a PVC according to InterimVolumeTemplate and attach it to the respective pod
+func UpsertInterimVolume(kubeClient kubernetes.Interface, podSpec core.PodSpec, interimVolumeTemplate *core.PersistentVolumeClaim, ref *core.ObjectReference) (core.PodSpec, error) {
+	// if no InterimVolumeTemplate is provided then nothing to do
+	if interimVolumeTemplate == nil {
+		return podSpec, nil
+	}
+
+	// Use BackupConfiguration/RestoreSession name as prefix of the interim volume
+	pvcMeta := metav1.ObjectMeta{
+		Name:      fmt.Sprintf("%s-%s", interimVolumeTemplate.Name, ref.Name),
+		Namespace: ref.Namespace,
+	}
+
+	// create the interim pvc
+	createdPVC, _, err := core_util.CreateOrPatchPVC(kubeClient, pvcMeta, func(in *core.PersistentVolumeClaim) *core.PersistentVolumeClaim {
+		// Set BackupConfiguration/RestoreSession as owner of the PVC so that it get deleted when the respective
+		// BackupConfiguration/RestoreSession is deleted.
+		core_util.EnsureOwnerReference(&in.ObjectMeta, ref)
+		in.Spec = interimVolumeTemplate.Spec
+		return in
+	})
+	if err != nil {
+		return podSpec, err
+	}
+
+	// Attach the PVC to the pod template
+	volumes := []core.Volume{
+		{
+			Name: apis.StashInterimVolume,
+			VolumeSource: core.VolumeSource{
+				PersistentVolumeClaim: &core.PersistentVolumeClaimVolumeSource{
+					ClaimName: createdPVC.Name,
+				},
+			},
+		},
+	}
+	volumeMounts := []core.VolumeMount{
+		{
+			Name:      apis.StashInterimVolume,
+			MountPath: apis.StashInterimVolumeMountPath,
+		},
+	}
+	return AttachPVC(podSpec, volumes, volumeMounts), nil
 }

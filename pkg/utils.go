@@ -5,11 +5,12 @@ import (
 	"os/exec"
 	"time"
 
+	"stash.appscode.dev/stash/pkg/restic"
+
 	"github.com/appscode/go/log"
 	"k8s.io/client-go/kubernetes"
 	appcatalog_cs "kmodules.xyz/custom-resources/client/clientset/versioned"
 	kubedbconfig_api "kubedb.dev/apimachinery/apis/config/v1alpha1"
-	"stash.appscode.dev/stash/pkg/restic"
 )
 
 const (
