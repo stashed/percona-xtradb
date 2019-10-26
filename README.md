@@ -1,6 +1,6 @@
 [![Go Report Card](https://goreportcard.com/badge/stash.appscode.dev/percona-xtradb)](https://goreportcard.com/report/stash.appscode.dev/percona-xtradb)
 [![Build Status](https://github.com/stashed/percona-xtradb/workflows/CI/badge.svg)](https://github.com/stashed/percona-xtradb/actions?workflow=CI)
-[![Docker Pulls](https://img.shields.io/docker/pulls/appscode/xtradb-stash.svg)](https://hub.docker.com/r/appscode/xtradb-stash/)
+[![Docker Pulls](https://img.shields.io/docker/pulls/stashed/stash-percona-xtradb.svg)](https://hub.docker.com/r/stashed/stash-percona-xtradb/)
 [![Slack](https://slack.appscode.com/badge.svg)](https://slack.appscode.com)
 [![Twitter](https://img.shields.io/twitter/follow/appscodehq.svg?style=social&logo=twitter&label=Follow)](https://twitter.com/intent/follow?screen_name=AppsCodeHQ)
 
