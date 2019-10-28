@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	api_v1beta1 "stash.appscode.dev/stash/apis/stash/v1beta1"
 	"stash.appscode.dev/stash/pkg/restic"
@@ -75,7 +76,7 @@ func NewCmdBackup() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&opt.dumpArgs, "xtradb-args", defaultDumpArgs, "Additional arguments")
+	cmd.Flags().StringVar(&opt.xtradbArgs, "xtradb-args", defaultDumpArgs, "Additional arguments")
 	cmd.Flags().Int32Var(&opt.socatRetry, "socat-retry", kubedbconfig_api.SOCATOptionRetry, "Additional arguments")
 
 	cmd.Flags().StringVar(&masterURL, "master", masterURL, "The address of the Kubernetes API server (overrides any value in kubeconfig)")
@@ -159,8 +160,8 @@ func (opt *perconaOptions) backupPerconaXtraDB() (*restic.BackupOutput, error) {
 				"-h", appBinding.Spec.ClientConfig.Service.Name,
 			},
 		}
-		if opt.dumpArgs != "" {
-			opt.backupOptions.StdinPipeCommand.Args = append(opt.backupOptions.StdinPipeCommand.Args, opt.dumpArgs)
+		for _, arg := range strings.Fields(opt.xtradbArgs) {
+			opt.backupOptions.StdinPipeCommand.Args = append(opt.backupOptions.StdinPipeCommand.Args, arg)
 		}
 	} else { // clustered database
 		opt.backupOptions.StdinFileName = xtraBackupStreamFile

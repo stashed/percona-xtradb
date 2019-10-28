@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"path/filepath"
+	"strings"
 
 	api_v1beta1 "stash.appscode.dev/stash/apis/stash/v1beta1"
 	"stash.appscode.dev/stash/pkg/restic"
@@ -73,7 +74,7 @@ func NewCmdRestore() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&opt.mysqlArgs, "xtradb-args", opt.mysqlArgs, "Additional arguments")
+	cmd.Flags().StringVar(&opt.xtradbArgs, "xtradb-args", opt.xtradbArgs, "Additional arguments")
 	cmd.Flags().Int32Var(&opt.targetAppReplicas, "target-app-replicas", opt.targetAppReplicas, "Additional arguments")
 
 	cmd.Flags().StringVar(&masterURL, "master", masterURL, "The address of the Kubernetes API server (overrides any value in kubeconfig)")
@@ -144,10 +145,9 @@ func (opt *perconaOptions) restorePerconaXtraDB() (*restic.RestoreOutput, error)
 				"-h", appBinding.Spec.ClientConfig.Service.Name,
 			},
 		}
-		if opt.mysqlArgs != "" {
-			opt.dumpOptions.StdoutPipeCommand.Args = append(opt.dumpOptions.StdoutPipeCommand.Args, opt.mysqlArgs)
+		for _, arg := range strings.Fields(opt.xtradbArgs) {
+			opt.dumpOptions.StdoutPipeCommand.Args = append(opt.dumpOptions.StdoutPipeCommand.Args, arg)
 		}
-
 		// wait for DB ready
 		waitForDBReady(appBinding.Spec.ClientConfig.Service.Name, appBinding.Spec.ClientConfig.Service.Port)
 	} else {

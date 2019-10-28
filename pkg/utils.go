@@ -33,8 +33,7 @@ type perconaOptions struct {
 	namespace         string
 	appBindingName    string
 	outputDir         string
-	dumpArgs          string
-	mysqlArgs         string
+	xtradbArgs        string
 	garbdCnf          kubedbconfig_api.GaleraArbitratorConfiguration
 	socatRetry        int32
 	targetAppReplicas int32
