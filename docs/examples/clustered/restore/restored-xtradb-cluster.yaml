@@ -6,6 +6,8 @@ metadata:
 spec:
   version: "5.7"
   replicas: 3
+  databaseSecret:
+    secretName: sample-xtradb-cluster-auth
   storageType: Durable
   storage:
     storageClassName: "standard"

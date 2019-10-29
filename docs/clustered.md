@@ -34,6 +34,12 @@ $ kubectl apply -f ./docs/examples/clustered/backup/repository.yaml
 repositories.stash.appscode.com/gcs-repo-xtradb-cluster created
 ```
 
+**Install Chart:**
+
+```console
+$ helm template chart/stash-percona-xtradb --name=percona-xtradb-5.7  --set docker.registry=appscodeci --set docker.tag=refactor_linux_amd64 | kubectl apply -f -
+```
+
 **Create BackupConfiguration:**
 
 ```bash
