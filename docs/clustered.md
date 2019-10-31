@@ -201,7 +201,7 @@ You have to replace the `<...>` quoted part with proper values in the above YAML
 
 #### Insert Sample Data
 
-Now, we are going to exec into the database pod and create some sample data. At first, find out the database Pod using the following command,
+Now, we are going to exec into the database pod and create some sample data. At first, find out the database pods using the following command,
 
 ```bash
 $ kubectl get pods -n demo --selector="kubedb.com/name=sample-xtradb-cluster"
@@ -302,7 +302,7 @@ secret/gcs-secret created
 
 #### Create Repository
 
-Now, crete a `Respository` using this secret. Below is the YAML of Repository CRD we are going to create,
+Now, crete a `Repository` using this secret. Below is the YAML of Repository CRD we are going to create,
 
 ```yaml
 apiVersion: stash.appscode.com/v1alpha1
@@ -500,7 +500,7 @@ restored-xtradb-cluster   5.7       Initializing   4m10s
 
 Now, we need to create a `RestoreSession` CRD pointing to the newly created restored database.
 
-In Percona XtraDB, the RestoreSesson object contains some different configurations unlike other databases supported by KubeDB. To restore Percona XtraDB, Stash operator will create the required number of PVCs and mount the data in the data directory `/var/lib/mysql` with proper ownership and permission. After completing the PVC creation, KubeDB then creates Appbinding, Secret, Services, etc. objects.
+In Percona XtraDB, the RestoreSession object contains some different configurations unlike other databases supported by KubeDB. To restore Percona XtraDB, Stash operator will create the required number of PVCs and mount the data in the data directory `/var/lib/mysql` with proper ownership and permission. After completing the PVC creation, KubeDB then creates AppBinding, Secret, Services, etc. objects.
 
 Below is the contents of YAML file of the RestoreSession CRD that we are going to create to restore the backed up data into the newly created database provisioned by PerconaXtrDB CRD named `restored-xtradb-cluster`.
 
@@ -547,7 +547,7 @@ Here,
 - `.spec.task.name` specifies the name of the Task CRD that specifies the necessary Functions and their execution order to restore a Percona XtraDB database.
 - `.spec.repository.name` specifies the Repository CRD that holds the backend information where our backed up data has been stored.
 - `.spec.target.replicas` specifies the number of PVCs where snapshot data will be restored.
-- `.spec.target.ref` refers to the  AppBinding object for the `restored-xtradb-cluster` PerconaXtraDB object. Though the KubeDB operator will create this Appbinding object later, we need to tell Stash operator about this Appbinding object ref. Because the Appbinding object name is identical with the corresponding PerconaXtraDB object name and the names of the PVCs directly depend on this name.
+- `.spec.target.ref` refers to the  AppBinding object for the `restored-xtradb-cluster` PerconaXtraDB object. Though the KubeDB operator will create this AppBinding object later, we need to tell Stash operator about this AppBinding object ref. Because the AppBinding object name is identical with the corresponding PerconaXtraDB object name and the names of the PVCs directly depend on this name.
 - `.spec.target.volumeClaimTemplates` specifies the template used for the PVCs. The important thing here is the `.metadata.name`. In KubeDB side, the PVC name is formed by following the rule `data-<xtradb_crd_object_name>-<statefulset_pod_ordinal>`. Since we have created our restore database named `restored-xtradb-cluster` and later KubeDB will create a StatefulSet for this database, the PVC names will be `data-restored-xtradb-cluster-0`, `data-restored-xtradb-cluster-1`, `data-restored-xtradb-cluster-2`, etc. up to the number of replicas. Here Stash operator will create these PVCs by following the same convention as KubeDB. We just need to provide the `.metadata.name` as `data-<xtradb_crd_object_name>-${POD_ORDINAL}`. You must insert `${POD_ORDINAL}` at the end of the name. Stash will create the required PVCs by replacing this with the corresponding pod index. That means if the value of `.spec.target.replicas` is 3, then Stash will create 3 PVCs named `data-restored-xtradb-cluster-0`, `data-restored-xtradb-cluster-1`, and `data-restored-xtradb-cluster-2`.
 - `.spec.target.volumeMounts` specifies the mount path for the volume. The `mountPath` must be  `/var/lib/mysql` as expected by Percona XtraDB server. And the volume name is form as `"data-<xtradb_crd_object_name>"`. Since for restoring purpose, we have created a PerconaXtraDB object named `restored-xtradb-cluster`, the volume name will be `"data-restored-xtradb-cluster"`.
 - `.spec.rules` specifies that we are restoring data from the `latest` backup snapshot of the database. Empty (`[]`) `targetHosts` means snapshot data will be restored in all specified number of PVCs. And another obvious thing is we want to restore the same data from `host-0` to all PVCs. During the backup procedure, we took backup data as `host-0` from the percona xtradb cluster. So, here the source host is `host-0`.
