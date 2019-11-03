@@ -48,9 +48,9 @@ first=${myips%% *}
 sst_request_string=$(get_sst_request_string $first $sst_request_opts)
 
 # Start backup procedure
-echo "" > $log_file
+echo "" >$log_file
 timeout -k 25 20 \
-  garbd \
+    garbd \
     --address="$cluster_addr" \
     --group="$cluster_name" \
     --sst="$sst_request_string" \
@@ -59,5 +59,5 @@ timeout -k 25 20 \
 SOCAT_OPTS=$socat_opts
 
 # the first socat run does not give the streams. So, we need to run socat again
-socat -u "$SOCAT_OPTS" stdio > /dev/null
+socat -u "$SOCAT_OPTS" stdio >/dev/null
 socat -u "$SOCAT_OPTS" stdio
