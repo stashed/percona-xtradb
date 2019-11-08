@@ -189,6 +189,7 @@ spec:
     service:
       name: <my_database_service_name>
       port: <my_database_port_number>
+      scheme: mysql
   secret:
     name: <my_database_credentials_secret_name>
   # type field is optional. you can keep it empty.
