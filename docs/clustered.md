@@ -2,13 +2,13 @@
 title: Backup & Restore Clustered Percona XtraDB Database | Stash
 description: Backup Clustered Percona XtraDB Database database using Stash
 menu:
-  product_stash_{{ .version }}:
+  docs_{{ .version }}:
     identifier: percona-xtradb-clustered-guide-{{ .subproject_version }}
     name: Backup & Restore Clustered Percona XtraDB
     parent: stash-percona-xtradb-guides-{{ .subproject_version }}
     weight: 10
 product_name: stash
-menu_name: product_stash_{{ .version }}
+menu_name: docs_{{ .version }}
 section_menu_id: stash-addons
 ---
 
