@@ -1,0 +1,22 @@
+apiVersion: kubedb.com/v1alpha1
+kind: PerconaXtraDB
+metadata:
+  name: restored-xtradb
+  namespace: demo
+spec:
+  version: "5.7"
+  replicas: 1
+  databaseSecret:
+    secretName: sample-xtradb-auth
+  storageType: Durable
+  storage:
+    storageClassName: "standard"
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi
+  init:
+    stashRestoreSession:
+      name: restored-xtradb-restore
+  terminationPolicy: WipeOut

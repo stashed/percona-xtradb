@@ -1,10 +1,10 @@
 ---
-title: Backup & Restore Clustered Percona XtraDB Database | Stash
-description: Backup Clustered Percona XtraDB Database database using Stash
+title: Backup & Restore Percona XtraDB Cluster | Stash
+description: Backup & Restore Percona XtraDB Cluster using Stash
 menu:
   docs_{{ .version }}:
-    identifier: percona-xtradb-clustered-guide-{{ .subproject_version }}
-    name: Backup & Restore Clustered Percona XtraDB
+    identifier: percona-xtradb-clustere-guide-{{ .subproject_version }}
+    name: Backup & Restore Percona XtraDB Cluster
     parent: stash-percona-xtradb-guides-{{ .subproject_version }}
     weight: 10
 product_name: stash
@@ -12,9 +12,9 @@ menu_name: docs_{{ .version }}
 section_menu_id: stash-addons
 ---
 
-# Backup and Restore Percona XtraDB database using Stash
+# Backup and Restore Percona XtraDB Cluster using Stash
 
-Stash 0.9.0+ supports backup and restoration of Percona XtraDB databases. This guide will show you how you can backup and restore your Percona XtraDB database with Stash.
+Stash 0.9.0+ supports backup and restoration of Percona XtraDB cluster databases. This guide will show you how you can backup and restore your Percona XtraDB cluster with Stash.
 
 ## Before You Begin
 
@@ -22,7 +22,7 @@ Stash 0.9.0+ supports backup and restoration of Percona XtraDB databases. This g
 - Install Stash in your cluster following the steps [here](/docs/setup/install.md).
 - Install Percona XtraDB addon for Stash following the steps [here](/docs/addons/percona-xtradb/setup/install.md)
 - Install [KubeDB](https://kubedb.com) in your cluster following the steps [here](https://kubedb.com/docs/latest/setup/install/). This step is optional. You can deploy your database using any method you want. We are using KubeDB because KubeDB simplifies many of the difficult or tedious management tasks to run a production-grade database on private and public clouds.
-- If you are not familiar with how Stash takes backup and restores Percona XtraDB databases, please check the following guide [here](/docs/addons/percona-xtradb/overview.md).
+- If you are not familiar with how Stash takes backup and restores Percona XtraDB, please check the following guide [here](/docs/addons/percona-xtradb/overview.md).
 
 You have to be familiar with the following custom resources:
 
@@ -41,13 +41,13 @@ namespace/demo created
 
 > Note: YAML files used in this tutorial are stored [here](https://github.com/stashed/percona-xtradb/tree/{{< param "info.subproject_version" >}}/docs/examples).
 
-## Backup Percona XtraDB
+## Backup Percona XtraDB Cluster
 
-This section will demonstrate how to backup a Percona XtraDB database. Here, we are going to deploy a Percona XtraDB database using KubeDB. Then, we are going to back up this database into a GCS bucket. Finally, we are going to restore the backed up data into another Percona XtraDB database.
+This section will demonstrate how to backup a Percona XtraDB cluster. Here, we are going to deploy a Percona XtraDB cluster using KubeDB. Then, we are going to back up this database into a GCS bucket. Finally, we are going to restore the backed up data into another Percona XtraDB cluster.
 
-### Deploy Sample Percona XtraDB Database
+### Deploy Sample Percona XtraDB Cluster
 
-Let's deploy a sample Percona XtraDB database and insert some data into it.
+Let's deploy a sample Percona XtraDB cluster and insert some data into it.
 
 #### Create Percona XtraDB CRD
 
@@ -80,7 +80,7 @@ $ kubectl apply -f https://github.com/stashed/percona-xtradb/raw/{{< param "info
 perconaxtradb.kubedb.com/sample-xtradb-cluster created
 ```
 
-KubeDB will deploy a Percona XtraDB database according to the above specification. It will also create the necessary Secrets and Services to access the database.
+KubeDB will deploy a Percona XtraDB cluster according to the above specification. It will also create the necessary Secrets and Services to access the database.
 
 Let's check if the database is ready to use,
 
@@ -174,9 +174,9 @@ Stash uses the AppBinding CRD to connect with the target database. It requires t
 
 #### Creating AppBinding Manually
 
-If you deploy the Percona XtraDB database without KubeDB, you have to create the AppBinding CRD manually in the same namespace as the service and secret of the database.
+If you deploy the Percona XtraDB cluster without KubeDB, you have to create the AppBinding CRD manually in the same namespace as the service and secret of the database.
 
-The following YAML shows a minimal AppBinding specification that you have to create if you deploy the Percona XtraDB database without KubeDB.
+The following YAML shows a minimal AppBinding specification that you have to create if you deploy the Percona XtraDB cluster without KubeDB.
 
 ```yaml
 apiVersion: appcatalog.appscode.com/v1alpha1
@@ -228,9 +228,10 @@ Now, let's exec into the Pod to enter into `mysql` shell and create a database a
 $ kubectl exec -it -n demo sample-xtradb-cluster-0 -- mysql --user=root --password=CZYWy7MDXiedL2EG
 mysql: [Warning] Using a password on the command line interface can be insecure.
 Welcome to the MySQL monitor.  Commands end with ; or \g.
-Your MySQL connection id is 10
-Server version: 8.0.14 MySQL Community Server - GPL
+Your MySQL connection id is 275
+Server version: 5.7.25-28-57 Percona XtraDB Cluster (GPL), Release rel28, Revision a2ef85f, WSREP version 31.35, wsrep_31.35
 
+Copyright (c) 2009-2019 Percona LLC and/or its affiliates
 Copyright (c) 2000, 2019, Oracle and/or its affiliates. All rights reserved.
 
 Oracle is a registered trademark of Oracle Corporation and/or its
@@ -362,7 +363,7 @@ spec:
 Here,
 
 - `.spec.schedule` specifies that we want to back up the database at 5 minutes interval.
-- `.spec.task.name` specifies the name of the Task CRD that specifies the necessary Functions and their execution order to backup a Percona XtraDB database.
+- `.spec.task.name` specifies the name of the Task CRD that specifies the necessary Functions and their execution order to backup a Percona XtraDB cluster.
 - `.spec.target.ref` refers to the AppBinding CRD that was created for the `sample-xtradb-cluster` database.
 
 Let's create the `BackupConfiguration` CRD we have shown above,
@@ -391,14 +392,14 @@ The `sample-xtradb-cluster-backup` CronJob will trigger a backup on each schedul
 Wait for a schedule to appear. Run the following command to watch `BackupSession` CRD,
 
 ```bash
-$ kubectl get backupsession -n demo -l=stash.appscode.com/backup-configuration=sample-xtradb-cluster-backup --watch
+$ kubectl get backupsession -n demo -l=stash.appscode.com/invoker-name=sample-xtradb-cluster-backup --watch
 NAME                                      INVOKER-TYPE          INVOKER-NAME                   PHASE       AGE
 sample-xtradb-cluster-backup-1572439801   BackupConfiguration   sample-xtradb-cluster-backup   Succeeded   4m27s
 ```
 
 Here, the phase **`Succeeded`** means that the backupsession has been succeeded.
 
->Note: Backup CronJob creates `BackupSession` CRD the label `stash.appscode.com/backup-configuration=<BackupConfiguration_crd_name>`. We can use this label to watch only the `BackupSession` of our desired `BackupConfiguration`.
+>Note: Backup CronJob creates `BackupSession` CRD the label `stash.appscode.com/invoker-name=<BackupConfiguration_crd_name>`. We can use this label to watch only the `BackupSession` of our desired `BackupConfiguration`.
 
 #### Verify Backup
 
@@ -419,7 +420,7 @@ Now, if we navigate to the GCS bucket, we will see the backed up data has been s
 
 > Note: Stash keeps all the backed up data encrypted. So, data in the backend will not make any sense until they are decrypted.
 
-### Restore Percona XtraDB
+### Restore Percona XtraDB Cluster
 
 In this section, we are going to restore the database from the backup we have taken in the previous section. We are going to deploy a new database and initialize it from the backup.
 
@@ -501,7 +502,7 @@ restored-xtradb-cluster   5.7-cluster   Initializing   4m10s
 
 Now, we need to create a `RestoreSession` CRD pointing to the newly created restored database.
 
-In Percona XtraDB, the RestoreSession object contains some different configurations unlike other databases supported by KubeDB. To restore Percona XtraDB, Stash operator will create the required number of PVCs and mount the data in the data directory `/var/lib/mysql` with proper ownership and permission. After completing the PVC creation, KubeDB then creates AppBinding, Secret, Services, etc. objects.
+In case of Percona XtraDB cluster, the RestoreSession object contains some different configurations unlike other databases supported by KubeDB. To restore Percona XtraDB cluster, Stash operator will create the required number of PVCs and mount the data in the data directory `/var/lib/mysql` with proper ownership and permission. After completing the PVC creation, KubeDB then creates AppBinding, Secret, Services, etc. objects.
 
 Below is the contents of YAML file of the RestoreSession CRD that we are going to create to restore the backed up data into the newly created database provisioned by PerconaXtrDB CRD named `restored-xtradb-cluster`.
 
@@ -545,13 +546,13 @@ spec:
 Here,
 
 - `.metadata.labels` specifies a `kubedb.com/kind: PerconaXtraDB` label that is used by KubeDB to watch this RestoreSession object.
-- `.spec.task.name` specifies the name of the Task CRD that specifies the necessary Functions and their execution order to restore a Percona XtraDB database.
+- `.spec.task.name` specifies the name of the Task CRD that specifies the necessary Functions and their execution order to restore a Percona XtraDB cluster.
 - `.spec.repository.name` specifies the Repository CRD that holds the backend information where our backed up data has been stored.
 - `.spec.target.replicas` specifies the number of PVCs where snapshot data will be restored.
 - `.spec.target.ref` refers to the  AppBinding object for the `restored-xtradb-cluster` PerconaXtraDB object. Though the KubeDB operator will create this AppBinding object later, we need to tell Stash operator about this AppBinding object ref. Because the AppBinding object name is identical with the corresponding PerconaXtraDB object name and the names of the PVCs directly depend on this name.
 - `.spec.target.volumeClaimTemplates` specifies the template used for the PVCs. The important thing here is the `.metadata.name`. In KubeDB side, the PVC name is formed by following the rule `data-<xtradb_crd_object_name>-<statefulset_pod_ordinal>`. Since we have created our restore database named `restored-xtradb-cluster` and later KubeDB will create a StatefulSet for this database, the PVC names will be `data-restored-xtradb-cluster-0`, `data-restored-xtradb-cluster-1`, `data-restored-xtradb-cluster-2`, etc. up to the number of replicas. Here Stash operator will create these PVCs by following the same convention as KubeDB. We just need to provide the `.metadata.name` as `data-<xtradb_crd_object_name>-${POD_ORDINAL}`. You must insert `${POD_ORDINAL}` at the end of the name. Stash will create the required PVCs by replacing this with the corresponding pod index. That means if the value of `.spec.target.replicas` is 3, then Stash will create 3 PVCs named `data-restored-xtradb-cluster-0`, `data-restored-xtradb-cluster-1`, and `data-restored-xtradb-cluster-2`.
 - `.spec.target.volumeMounts` specifies the mount path for the volume. The `mountPath` must be  `/var/lib/mysql` as expected by Percona XtraDB server. And the volume name is form as `"data-<xtradb_crd_object_name>"`. Since for restoring purpose, we have created a PerconaXtraDB object named `restored-xtradb-cluster`, the volume name will be `"data-restored-xtradb-cluster"`.
-- `.spec.rules` specifies that we are restoring data from the `latest` backup snapshot of the database. Empty (`[]`) `targetHosts` means snapshot data will be restored in all specified number of PVCs. And another obvious thing is we want to restore the same data from `host-0` to all PVCs. During the backup procedure, we took backup data as `host-0` from the percona xtradb cluster. So, here the source host is `host-0`.
+- `.spec.rules` specifies that we are restoring data from the `latest` backup snapshot of the database. Empty (`[]`) `targetHosts` means snapshot data will be restored in all specified number of PVCs. And another obvious thing is we want to restore the same data from `host-0` to all PVCs. During the backup procedure, we took backup data as `host-0` from the Percona XtraDB cluster. So, here the source host is `host-0`.
 
 > **Warning:** Label `kubedb.com/kind: PerconaXtraDB` is mandatory if you are using KubeDB to deploy the database. Otherwise, the database will be stuck in **`Initializing`** state.
 
