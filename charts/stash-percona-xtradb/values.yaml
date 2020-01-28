@@ -11,7 +11,7 @@ docker:
 
 backup:
   # optional argument to send mysqldump or mysql command
-  xtradbArgs: ""
+  xtradbArgs: "--all-databases"
   # optional argument to send backup script
   socatRetry: 30
 
