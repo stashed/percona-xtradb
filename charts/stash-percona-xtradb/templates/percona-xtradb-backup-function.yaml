@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "stash-percona-xtradb.labels" . | nindent 4 }}
 spec:
-  image: {{ .Values.docker.registry }}/{{ .Values.docker.image }}:{{- .Values.docker.tag }}
+  image: {{ .Values.image.registry }}/{{ .Values.image.repository }}:{{- .Values.image.tag }}
   args:
   - backup-percona-xtradb
   # setup information
@@ -19,7 +19,7 @@ spec:
   - --enable-cache=${ENABLE_CACHE:=true}
   - --max-connections=${MAX_CONNECTIONS:=0} # 0 indicates use default connection limit
   - --hostname=${HOSTNAME:=}
-  - --xtradb-args=${xtradbArgs:={{ .Values.backup.xtradbArgs }}} # optional arguments pass to mysqldump command
+  - --xtradb-args=${args:={{ .Values.backup.args }}} # optional arguments pass to mysqldump command
   - --socat-retry=${socatRetry:={{ .Values.backup.socatRetry }}} # optional argument to send backup script
   # target information
   - --namespace=${NAMESPACE:=default}

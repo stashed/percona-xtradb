@@ -56,16 +56,16 @@ The following table lists the configurable parameters of the `stash-percona-xtra
 
 |     Parameter        |                                                                    Description                                                                     |      Default      |
 | :------------------: | -------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------: |
-| `docker.registry`    | Docker registry used to pull respective images                                                                                                     |     `stashed`     |
-| `docker.image`       | Docker image used to take backup of Percona XtraDB databases and restore them                                                                               |   `stash-percona-xtradb`   |
-| `docker.tag`         | Tag of the image that is used to take backup of Percona XtraDB databases and restore them. This is usually same as the database version it can take backup. |       `5.7`    |
-| `backup.xtradbArgs`  | Optional arguments to pass to `mysqldump` command  during bakcup process                                                                           | `--all-databases` |
-| `restore.xtradbArgs` | Optional arguments to pass to `mysql` command during restore process                                                                               |        ""         |
+| `image.registry`     | Docker registry used to pull respective images                                                                                                     |     `stashed`     |
+| `image.repository`   | Docker image used to take backup of Percona XtraDB databases and restore them                                                                               |   `stash-percona-xtradb`   |
+| `image.tag`          | Tag of the image that is used to take backup of Percona XtraDB databases and restore them. This is usually same as the database version it can take backup. |       `5.7`    |
+| `backup.args`  | Optional arguments to pass to `mysqldump` command  during bakcup process                                                                           | `--all-databases` |
+| `restore.args` | Optional arguments to pass to `mysql` command during restore process                                                                               |        ""         |
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`.
 
 For example:
 
 ```console
-helm install stash-percona-xtradb-5.7 appscode/stash-percona-xtradb -n kube-system ---set docker.registry=my-registry
+helm install stash-percona-xtradb-5.7 appscode/stash-percona-xtradb -n kube-system ---set image.registry=my-registry
 ```

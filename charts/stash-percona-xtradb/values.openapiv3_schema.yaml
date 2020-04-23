@@ -1,0 +1,49 @@
+properties:
+  backup:
+    properties:
+      args:
+        type: string
+      socatRetry:
+        format: int32
+        type: integer
+    required:
+    - args
+    - socatRetry
+    type: object
+  fullnameOverride:
+    type: string
+  image:
+    properties:
+      registry:
+        type: string
+      repository:
+        type: string
+      tag:
+        type: string
+    required:
+    - registry
+    - repository
+    - tag
+    type: object
+  nameOverride:
+    type: string
+  replicaCount:
+    format: int32
+    type: integer
+  restore:
+    properties:
+      args:
+        type: string
+      targetAppReplicas:
+        format: int32
+        type: integer
+    required:
+    - args
+    - targetAppReplicas
+    type: object
+required:
+- backup
+- image
+- replicaCount
+- restore
+type: object
