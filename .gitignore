@@ -22,16 +22,14 @@ _testmain.go
 *.exe
 *.test
 *.prof
-
-/.go
 /.idea
-/.vscode
-/bin
-/coverage.txt
 /dist
-.env*
+**/junit.xml
+**/.env
+/.vscode
+/coverage.txt
 
-# credential related files
-RESTIC_PASSWORD
-GOOGLE_PROJECT_ID
-GOOGLE_SERVICE_ACCOUNT_JSON_KEY
+/bin
+/.go
+
+apiserver.local.config/**
