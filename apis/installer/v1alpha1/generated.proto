@@ -37,12 +37,15 @@ message ImageRef {
 }
 
 message PerconaXtraDBBackup {
+  // +optional
   optional string args = 1;
 
+  // +optional
   optional int32 socatRetry = 2;
 }
 
 message PerconaXtraDBRestore {
+  // +optional
   optional string args = 1;
 
   optional int32 targetAppReplicas = 2;
