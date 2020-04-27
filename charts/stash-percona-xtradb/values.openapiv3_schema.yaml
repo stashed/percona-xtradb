@@ -6,9 +6,6 @@ properties:
       socatRetry:
         format: int32
         type: integer
-    required:
-    - args
-    - socatRetry
     type: object
   fullnameOverride:
     type: string
@@ -38,7 +35,6 @@ properties:
         format: int32
         type: integer
     required:
-    - args
     - targetAppReplicas
     type: object
 required:

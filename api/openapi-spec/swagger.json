@@ -887,10 +887,6 @@
     },
     "dev.appscode.stash.percona-xtradb.apis.installer.v1alpha1.PerconaXtraDBBackup": {
       "type": "object",
-      "required": [
-        "args",
-        "socatRetry"
-      ],
       "properties": {
         "args": {
           "type": "string"
@@ -904,7 +900,6 @@
     "dev.appscode.stash.percona-xtradb.apis.installer.v1alpha1.PerconaXtraDBRestore": {
       "type": "object",
       "required": [
-        "args",
         "targetAppReplicas"
       ],
       "properties": {

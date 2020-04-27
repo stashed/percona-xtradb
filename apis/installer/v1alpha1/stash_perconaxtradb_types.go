@@ -43,9 +43,9 @@ type StashPerconaXtraDB struct {
 
 // StashPerconaXtraDBSpec is the schema for Stash Percona XtraDB values file
 type StashPerconaXtraDBSpec struct {
-	//+optional
+	// +optional
 	NameOverride string `json:"nameOverride" protobuf:"bytes,1,opt,name=nameOverride"`
-	//+optional
+	// +optional
 	FullnameOverride string               `json:"fullnameOverride" protobuf:"bytes,2,opt,name=fullnameOverride"`
 	ReplicaCount     int32                `json:"replicaCount" protobuf:"varint,3,opt,name=replicaCount"`
 	Image            ImageRef             `json:"image" protobuf:"bytes,4,opt,name=image"`
@@ -60,11 +60,14 @@ type ImageRef struct {
 }
 
 type PerconaXtraDBBackup struct {
-	Args       string `json:"args" protobuf:"bytes,1,opt,name=args"`
-	SocatRetry int32  `json:"socatRetry" protobuf:"varint,2,opt,name=socatRetry"`
+	// +optional
+	Args string `json:"args" protobuf:"bytes,1,opt,name=args"`
+	// +optional
+	SocatRetry int32 `json:"socatRetry" protobuf:"varint,2,opt,name=socatRetry"`
 }
 
 type PerconaXtraDBRestore struct {
+	// +optional
 	Args              string `json:"args" protobuf:"bytes,1,opt,name=args"`
 	TargetAppReplicas int32  `json:"targetAppReplicas" protobuf:"varint,2,opt,name=targetAppReplicas"`
 }
