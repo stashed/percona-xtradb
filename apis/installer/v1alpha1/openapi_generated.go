@@ -15516,7 +15516,6 @@ func schema_percona_xtradb_apis_installer_v1alpha1_PerconaXtraDBBackup(ref commo
 						},
 					},
 				},
-				Required: []string{"args", "socatRetry"},
 			},
 		},
 	}
@@ -15541,7 +15540,7 @@ func schema_percona_xtradb_apis_installer_v1alpha1_PerconaXtraDBRestore(ref comm
 						},
 					},
 				},
-				Required: []string{"args", "targetAppReplicas"},
+				Required: []string{"targetAppReplicas"},
 			},
 		},
 	}
