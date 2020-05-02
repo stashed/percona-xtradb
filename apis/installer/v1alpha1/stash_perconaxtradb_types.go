@@ -47,10 +47,9 @@ type StashPerconaXtraDBSpec struct {
 	NameOverride string `json:"nameOverride" protobuf:"bytes,1,opt,name=nameOverride"`
 	// +optional
 	FullnameOverride string               `json:"fullnameOverride" protobuf:"bytes,2,opt,name=fullnameOverride"`
-	ReplicaCount     int32                `json:"replicaCount" protobuf:"varint,3,opt,name=replicaCount"`
-	Image            ImageRef             `json:"image" protobuf:"bytes,4,opt,name=image"`
-	Backup           PerconaXtraDBBackup  `json:"backup" protobuf:"bytes,5,opt,name=backup"`
-	Restore          PerconaXtraDBRestore `json:"restore" protobuf:"bytes,6,opt,name=restore"`
+	Image            ImageRef             `json:"image" protobuf:"bytes,3,opt,name=image"`
+	Backup           PerconaXtraDBBackup  `json:"backup" protobuf:"bytes,4,opt,name=backup"`
+	Restore          PerconaXtraDBRestore `json:"restore" protobuf:"bytes,5,opt,name=restore"`
 }
 
 type ImageRef struct {

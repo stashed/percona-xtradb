@@ -15650,12 +15650,6 @@ func schema_percona_xtradb_apis_installer_v1alpha1_StashPerconaXtraDBSpec(ref co
 							Format: "",
 						},
 					},
-					"replicaCount": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
-						},
-					},
 					"image": {
 						SchemaProps: spec.SchemaProps{
 							Ref: ref("stash.appscode.dev/percona-xtradb/apis/installer/v1alpha1.ImageRef"),
@@ -15672,7 +15666,7 @@ func schema_percona_xtradb_apis_installer_v1alpha1_StashPerconaXtraDBSpec(ref co
 						},
 					},
 				},
-				Required: []string{"replicaCount", "image", "backup", "restore"},
+				Required: []string{"image", "backup", "restore"},
 			},
 		},
 		Dependencies: []string{

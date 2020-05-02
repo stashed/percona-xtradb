@@ -24,9 +24,6 @@ properties:
     type: object
   nameOverride:
     type: string
-  replicaCount:
-    format: int32
-    type: integer
   restore:
     properties:
       args:
@@ -40,6 +37,5 @@ properties:
 required:
 - backup
 - image
-- replicaCount
 - restore
 type: object
