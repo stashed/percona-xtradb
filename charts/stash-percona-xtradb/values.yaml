@@ -2,22 +2,28 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# Overrides name template
 nameOverride: ""
+# Overrides fullname template
 fullnameOverride: ""
 
-replicaCount: 1
-
 image:
+  # Docker registry used to pull Percona XtraDB addon image
   registry: stashed
+  # Docker image used to backup/restore Percona XtraDB database
   repository: stash-percona-xtradb
+  # Tag of the image that is used to backup/restore Percona XtraDB database.
+  # This is usually same as the database version it can backup.
   tag: "5.7"
 
 backup:
-  # optional argument to send mysqldump or mysql command
+  # Arguments to pass to `mysqldump` command  during bakcup process
   args: "--all-databases"
-  # optional argument to send backup script
+  # Optional argument sent to backup script
   socatRetry: 30
 
 restore:
+  # Arguments to pass to `mysql` command during restore process
   args: ""
+  # Optional argument sent to recovery script
   targetAppReplicas: 1

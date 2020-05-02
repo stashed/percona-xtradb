@@ -66,9 +66,6 @@ spec:
               type: object
             nameOverride:
               type: string
-            replicaCount:
-              format: int32
-              type: integer
             restore:
               properties:
                 args:
@@ -82,7 +79,6 @@ spec:
           required:
           - backup
           - image
-          - replicaCount
           - restore
           type: object
       type: object

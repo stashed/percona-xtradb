@@ -75,12 +75,10 @@ message StashPerconaXtraDBSpec {
   // +optional
   optional string fullnameOverride = 2;
 
-  optional int32 replicaCount = 3;
+  optional ImageRef image = 3;
 
-  optional ImageRef image = 4;
+  optional PerconaXtraDBBackup backup = 4;
 
-  optional PerconaXtraDBBackup backup = 5;
-
-  optional PerconaXtraDBRestore restore = 6;
+  optional PerconaXtraDBRestore restore = 5;
 }
 
