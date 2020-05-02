@@ -973,7 +973,6 @@
       "description": "StashPerconaXtraDBSpec is the schema for Stash Percona XtraDB values file",
       "type": "object",
       "required": [
-        "replicaCount",
         "image",
         "backup",
         "restore"
@@ -990,10 +989,6 @@
         },
         "nameOverride": {
           "type": "string"
-        },
-        "replicaCount": {
-          "type": "integer",
-          "format": "int32"
         },
         "restore": {
           "$ref": "#/definitions/dev.appscode.stash.percona-xtradb.apis.installer.v1alpha1.PerconaXtraDBRestore"
