@@ -975,7 +975,8 @@
       "required": [
         "image",
         "backup",
-        "restore"
+        "restore",
+        "waitTimeout"
       ],
       "properties": {
         "backup": {
@@ -992,6 +993,10 @@
         },
         "restore": {
           "$ref": "#/definitions/dev.appscode.stash.percona-xtradb.apis.installer.v1alpha1.PerconaXtraDBRestore"
+        },
+        "waitTimeout": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
