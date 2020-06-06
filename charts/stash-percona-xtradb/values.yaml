@@ -27,3 +27,6 @@ restore:
   args: ""
   # Optional argument sent to recovery script
   targetAppReplicas: 1
+
+# Number of seconds to wait for the database to be ready before backup/restore process.
+waitTimeout: 300

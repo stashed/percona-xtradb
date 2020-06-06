@@ -76,10 +76,14 @@ spec:
               required:
               - targetAppReplicas
               type: object
+            waitTimeout:
+              format: int64
+              type: integer
           required:
           - backup
           - image
           - restore
+          - waitTimeout
           type: object
       type: object
   version: v1alpha1

@@ -38,6 +38,7 @@ func NewCmdRestore() *cobra.Command {
 		masterURL      string
 		kubeconfigPath string
 		opt            = perconaOptions{
+			waitTimeout: 300,
 			setupOptions: restic.SetupOptions{
 				ScratchDir:  restic.DefaultScratchDir,
 				EnableCache: false,
@@ -93,6 +94,7 @@ func NewCmdRestore() *cobra.Command {
 
 	cmd.Flags().StringVar(&opt.xtradbArgs, "xtradb-args", opt.xtradbArgs, "Additional arguments")
 	cmd.Flags().Int32Var(&opt.targetAppReplicas, "target-app-replicas", opt.targetAppReplicas, "Additional arguments")
+	cmd.Flags().Int32Var(&opt.waitTimeout, "wait-timeout", opt.waitTimeout, "Number of seconds to wait for the database to be ready")
 
 	cmd.Flags().StringVar(&masterURL, "master", masterURL, "The address of the Kubernetes API server (overrides any value in kubeconfig)")
 	cmd.Flags().StringVar(&kubeconfigPath, "kubeconfig", kubeconfigPath, "Path to kubeconfig file with authorization information (the master location is set by the master flag).")
@@ -167,7 +169,7 @@ func (opt *perconaOptions) restorePerconaXtraDB() (*restic.RestoreOutput, error)
 			opt.dumpOptions.StdoutPipeCommand.Args = append(opt.dumpOptions.StdoutPipeCommand.Args, arg)
 		}
 		// wait for DB ready
-		waitForDBReady(appBinding.Spec.ClientConfig.Service.Name, appBinding.Spec.ClientConfig.Service.Port)
+		waitForDBReady(appBinding.Spec.ClientConfig.Service.Name, appBinding.Spec.ClientConfig.Service.Port, opt.waitTimeout)
 	} else {
 		// set backed up file name
 		opt.dumpOptions.FileName = xtraBackupStreamFile
