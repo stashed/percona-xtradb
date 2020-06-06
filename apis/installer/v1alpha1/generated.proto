@@ -80,5 +80,7 @@ message StashPerconaXtraDBSpec {
   optional PerconaXtraDBBackup backup = 4;
 
   optional PerconaXtraDBRestore restore = 5;
+
+  optional int64 waitTimeout = 6;
 }
 

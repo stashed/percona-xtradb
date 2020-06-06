@@ -41,7 +41,7 @@ func TestStashPerconaXtraDBDefaultValues(t *testing.T) {
 }
 
 func compareStashPerconaXtraDBDefaultValues() (string, error) {
-	data, err := ioutil.ReadFile("../../../../percona-xtradb/charts/stash-percona-xtradb/values.yaml")
+	data, err := ioutil.ReadFile("../../../charts/stash-percona-xtradb/values.yaml")
 	if err != nil {
 		return "", err
 	}

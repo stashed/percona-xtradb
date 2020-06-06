@@ -22,6 +22,7 @@ spec:
   - --source-hostname=${SOURCE_HOSTNAME:=}
   - --xtradb-args=${args:={{ .Values.restore.args }}} # optional arguments pass to mysql or restore command
   - --target-app-replicas=${TARGET_APP_REPLICAS:={{ .Values.restore.targetAppReplicas }}}
+  - --wait-timeout=${waitTimeout:={{ .Values.waitTimeout}}}
   # target information
   - --namespace=${NAMESPACE:=default}
   - --appbinding=${TARGET_NAME:=}

@@ -55,6 +55,7 @@ The following table lists the configurable parameters of the `stash-percona-xtra
 | backup.socatRetry         | Optional argument sent to backup script                                                                                              | `30`                   |
 | restore.args              | Arguments to pass to `mysql` command during restore process                                                                          | `""`                   |
 | restore.targetAppReplicas | Optional argument sent to recovery script                                                                                            | `1`                    |
+| waitTimeout               | Number of seconds to wait for the database to be ready before backup/restore process.                                                | `300`                  |
 
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example:
