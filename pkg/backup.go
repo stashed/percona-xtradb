@@ -153,6 +153,12 @@ func (opt *perconaOptions) backupPerconaXtraDB() (*restic.BackupOutput, error) {
 		return nil, err
 	}
 
+	// transform secret
+	err = appBinding.TransformSecret(opt.kubeClient, appBindingSecret.Data)
+	if err != nil {
+		return nil, err
+	}
+
 	// galera arbitrator config
 	if appBinding.Spec.Parameters != nil {
 		err = json.Unmarshal(appBinding.Spec.Parameters.Raw, &opt.garbdCnf)

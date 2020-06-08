@@ -151,6 +151,12 @@ func (opt *perconaOptions) restorePerconaXtraDB() (*restic.RestoreOutput, error)
 			return nil, err
 		}
 
+		// transform secret
+		err = appBinding.TransformSecret(opt.kubeClient, appBindingSecret.Data)
+		if err != nil {
+			return nil, err
+		}
+
 		// set env for mysql
 		resticWrapper.SetEnv(envMySqlPassword, string(appBindingSecret.Data[mySqlPassword]))
 
