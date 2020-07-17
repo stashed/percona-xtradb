@@ -21,6 +21,7 @@ import (
 	"os/exec"
 	"time"
 
+	stash "stash.appscode.dev/apimachinery/client/clientset/versioned"
 	"stash.appscode.dev/apimachinery/pkg/restic"
 
 	"github.com/appscode/go/log"
@@ -44,9 +45,11 @@ const (
 
 type perconaOptions struct {
 	kubeClient    kubernetes.Interface
+	stashClient   stash.Interface
 	catalogClient appcatalog_cs.Interface
 
 	namespace         string
+	backupSessionName string
 	appBindingName    string
 	outputDir         string
 	xtradbArgs        string
