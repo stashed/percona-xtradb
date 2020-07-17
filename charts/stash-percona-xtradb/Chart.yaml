@@ -4,7 +4,7 @@ name: stash-percona-xtradb
 version: 5.7-beta.20200709
 appVersion: 5.7-beta.20200709
 home: https://stash.run
-icon: https://cdn.appscode.com/images/icon/stash.png
+icon: https://cdn.appscode.com/images/products/stash/addons/perconaxtradb-stash-addon.png
 sources:
 - https://github.com/stashed/percona-xtradb
 maintainers:
