@@ -24,6 +24,7 @@ spec:
   - --wait-timeout=${waitTimeout:={{ .Values.waitTimeout}}}
   # target information
   - --namespace=${NAMESPACE:=default}
+  - --backupsession=${BACKUP_SESSION:=}
   - --appbinding=${TARGET_NAME:=}
   # cleanup information
   - --retention-keep-last=${RETENTION_KEEP_LAST:=0}
