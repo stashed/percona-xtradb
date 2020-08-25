@@ -19,7 +19,7 @@ Stash 0.9.0+ supports backup and restoration of Percona XtraDB databases. This g
 ## Before You Begin
 
 - At first, you need to have a Kubernetes cluster, and the `kubectl` command-line tool must be configured to communicate with your cluster. If you do not already have a cluster, you can create one by using Minikube.
-- Install Stash in your cluster following the steps [here](/docs/setup/install.md).
+- Install Stash in your cluster following the steps [here](/docs/setup/README.md).
 - Install Percona XtraDB addon for Stash following the steps [here](/docs/addons/percona-xtradb/setup/install.md)
 - Install [KubeDB](https://kubedb.com) in your cluster following the steps [here](https://kubedb.com/docs/latest/setup/install/). This step is optional. You can deploy your database using any method you want. We are using KubeDB because KubeDB simplifies many of the difficult or tedious management tasks to run a production-grade database on private and public clouds.
 - If you are not familiar with how Stash takes backup and restores Percona XtraDB databases, please check the following guide [here](/docs/addons/percona-xtradb/overview.md).
