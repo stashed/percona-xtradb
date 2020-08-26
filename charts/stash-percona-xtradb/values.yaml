@@ -6,7 +6,6 @@
 nameOverride: ""
 # Overrides fullname template
 fullnameOverride: ""
-
 image:
   # Docker registry used to pull Percona XtraDB addon image
   registry: stashed
@@ -14,19 +13,16 @@ image:
   repository: stash-percona-xtradb
   # Tag of the image that is used to backup/restore Percona XtraDB database.
   # This is usually same as the database version it can backup.
-  tag: "5.7"
-
+  tag: v2020.08.26-rc.0
 backup:
   # Arguments to pass to `mysqldump` command  during bakcup process
   args: "--all-databases"
   # Optional argument sent to backup script
   socatRetry: 30
-
 restore:
   # Arguments to pass to `mysql` command during restore process
   args: ""
   # Optional argument sent to recovery script
   targetAppReplicas: 1
-
 # Number of seconds to wait for the database to be ready before backup/restore process.
 waitTimeout: 300
