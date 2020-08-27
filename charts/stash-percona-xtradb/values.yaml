@@ -13,7 +13,7 @@ image:
   repository: stash-percona-xtradb
   # Tag of the image that is used to backup/restore Percona XtraDB database.
   # This is usually same as the database version it can backup.
-  tag: 5.7-rc.20200826
+  tag: 5.7-rc.20200827
 backup:
   # Arguments to pass to `mysqldump` command  during bakcup process
   args: "--all-databases"
