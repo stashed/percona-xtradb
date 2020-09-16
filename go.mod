@@ -10,6 +10,7 @@ require (
 	github.com/google/gofuzz v1.1.0
 	github.com/spf13/cobra v1.0.0
 	github.com/yudai/gojsondiff v1.0.0
+	go.bytebuilders.dev/license-verifier/kubernetes v0.3.0
 	k8s.io/apiextensions-apiserver v0.18.5
 	k8s.io/apimachinery v0.18.5
 	k8s.io/client-go v12.0.0+incompatible
