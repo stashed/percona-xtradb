@@ -348,7 +348,7 @@ metadata:
 spec:
   schedule: "*/5 * * * *"
   task:
-    name: percona-xtradb-backup-5.7
+    name: percona-xtradb-backup-{{< param "info.subproject_version" >}}
   repository:
     name: gcs-repo-xtradb-cluster
   target:
@@ -442,7 +442,7 @@ Now, wait for a moment. Stash will pause the BackupConfiguration. Verify that th
 ```console
 $ kubectl get backupconfiguration -n demo sample-xtradb-cluster-backup
 NAME                           TASK                        SCHEDULE      PAUSED   AGE
-sample-xtradb-cluster-backup   percona-xtradb-backup-5.7   */5 * * * *   true     50m
+sample-xtradb-cluster-backup   percona-xtradb-backup-{{< param "info.subproject_version" >}}   */5 * * * *   true     50m
 ```
 
 Notice the `PAUSED` column. Value `true` for this field means that the BackupConfiguration has been paused.
@@ -518,7 +518,7 @@ metadata:
     kubedb.com/kind: PerconaXtraDB # this label is mandatory if you are using KubeDB to deploy the database.
 spec:
   task:
-    name: percona-xtradb-restore-5.7
+    name: percona-xtradb-restore-{{< param "info.subproject_version" >}}
   repository:
     name: gcs-repo-xtradb-cluster
   target:
