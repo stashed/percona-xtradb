@@ -5,19 +5,14 @@
 [![Twitter](https://img.shields.io/twitter/follow/kubestash.svg?style=social&logo=twitter&label=Follow)](https://twitter.com/intent/follow?screen_name=KubeStash)
 
 # Percona XtraDB
+
 Percona XtraDB backup and restore plugin for [Stash by AppsCode](https://stash.run).
-
----
-
-**Stash binaries collect anonymous usage statistics to help us learn how the software is being used and how we can improve it. To disable stats collection, run the operator with the flag** `--enable-analytics=false`.
-
----
 
 ## Support
 
 To speak with us, please leave a message on [our website](https://appscode.com/contact/).
 
-To join public discussions with the KubeDB community, join us in the [AppsCode Slack team](https://appscode.slack.com/messages/C8NCX6N23/details/) channel `#stash`. To sign up, use our [Slack inviter](https://slack.appscode.com/).
+To join public discussions with the Stash community, join us in the [AppsCode Slack team](https://appscode.slack.com/messages/C8NCX6N23/details/) channel `#stash`. To sign up, use our [Slack inviter](https://slack.appscode.com/).
 
 To receive product annoucements, follow us on [Twitter](https://twitter.com/KubeStash).
 
