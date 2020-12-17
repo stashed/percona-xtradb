@@ -18,6 +18,7 @@ package pkg
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -184,6 +185,10 @@ func (opt *perconaOptions) restorePerconaXtraDB(targetRef api_v1beta1.TargetRef)
 				"-u", string(appBindingSecret.Data[mySqlUser]),
 				"-h", appBinding.Spec.ClientConfig.Service.Name,
 			},
+		}
+		// if port is specified, append port in the arguments
+		if appBinding.Spec.ClientConfig.Service.Port != 0 {
+			opt.dumpOptions.StdoutPipeCommand.Args = append(opt.dumpOptions.StdoutPipeCommand.Args, fmt.Sprintf("--port=%d", appBinding.Spec.ClientConfig.Service.Port))
 		}
 		for _, arg := range strings.Fields(opt.xtradbArgs) {
 			opt.dumpOptions.StdoutPipeCommand.Args = append(opt.dumpOptions.StdoutPipeCommand.Args, arg)
