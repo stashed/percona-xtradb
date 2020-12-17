@@ -7,7 +7,7 @@ metadata:
     kubedb.com/kind: PerconaXtraDB # this label is mandatory if you are using KubeDB to deploy the database.
 spec:
   task:
-    name: percona-xtradb-restore-v2020.11.17
+    name: percona-xtradb-restore-v2020.12.17
   repository:
     name: gcs-repo-xtradb-cluster
   target:
