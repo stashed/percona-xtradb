@@ -39,7 +39,6 @@ $ helm delete stash-percona-xtradb-5.7.0-v1 -n kube-system
 ```
 
 The command removes all the Kubernetes components associated with the chart and deletes the release.
-
 ## Configuration
 
 The following table lists the configurable parameters of the `stash-percona-xtradb` chart and their default values.
