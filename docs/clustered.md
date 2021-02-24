@@ -133,8 +133,6 @@ metadata:
     app.kubernetes.io/component: database
     app.kubernetes.io/instance: sample-xtradb-cluster
     app.kubernetes.io/managed-by: kubedb.com
-    app.kubernetes.io/name: perconaxtradb
-    app.kubernetes.io/version: "5.7-cluster"
     app.kubernetes.io/name: perconaxtradbs.kubedb.com
     kubedb.com/name: sample-xtradb-cluster
   name: sample-xtradb-cluster
