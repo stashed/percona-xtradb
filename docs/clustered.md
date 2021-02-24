@@ -56,7 +56,7 @@ Let's deploy a sample Percona XtraDB cluster and insert some data into it.
 Below is the YAML of a sample `PerconaXtraDB` CRD that we are going to create for this tutorial:
 
 ```yaml
-apiVersion: kubedb.com/v1alpha1
+apiVersion: kubedb.com/v1alpha2
 kind: PerconaXtraDB
 metadata:
   name: sample-xtradb-cluster
@@ -135,12 +135,12 @@ metadata:
     app.kubernetes.io/managed-by: kubedb.com
     app.kubernetes.io/name: perconaxtradb
     app.kubernetes.io/version: "5.7-cluster"
-    kubedb.com/kind: PerconaXtraDB
+    app.kubernetes.io/name: perconaxtradbs.kubedb.com
     kubedb.com/name: sample-xtradb-cluster
   name: sample-xtradb-cluster
   namespace: demo
   ownerReferences:
-  - apiVersion: kubedb.com/v1alpha1
+  - apiVersion: kubedb.com/v1alpha2
     blockOwnerDeletion: false
     kind: PerconaXtraDB
     name: sample-xtradb-cluster
@@ -158,7 +158,7 @@ spec:
     url: tcp(sample-xtradb-cluster:3306)/
   parameters:
     address: gcomm://sample-xtradb-cluster-0.sample-xtradb-cluster-gvr.demo,sample-xtradb-cluster-1.sample-xtradb-cluster-gvr.demo,sample-xtradb-cluster-2.sample-xtradb-cluster-gvr.demo
-    apiVersion: config.kubedb.com/v1alpha1
+    apiVersion: config.kubedb.com/v1alpha2
     group: sample-xtradb-cluster
     kind: GaleraArbitratorConfiguration
     sstMethod: xtrabackup-v2
@@ -184,16 +184,16 @@ The following YAML shows a minimal AppBinding specification that you have to cre
 apiVersion: appcatalog.appscode.com/v1alpha1
 kind: AppBinding
 metadata:
-  name: <my_custom_appbinding_name>
-  namespace: <my_database_namespace>
+  name: your-custom-appbinding-name
+  namespace: your-database-namespace
 spec:
   clientConfig:
     service:
-      name: <my_database_service_name>
-      port: <my_database_port_number>
+      name: your-database-service-name
+      port: 3306
       scheme: mysql
   secret:
-    name: <my_database_credentials_secret_name>
+    name: your-database-auth-secret-name
   # type field is optional. you can keep it empty.
   # if you keep it empty then the value of TARGET_APP_RESOURCE variable
   # will be set to "appbinding" during auto-backup.
@@ -457,7 +457,7 @@ Now, we have to deploy the restored database similarly as we have deployed the o
 Below is the YAML for `PerconaXtraDB` CRD we are going deploy to initialize from backup,
 
 ```yaml
-apiVersion: kubedb.com/v1alpha1
+apiVersion: kubedb.com/v1alpha2
 kind: PerconaXtraDB
 metadata:
   name: restored-xtradb-cluster
@@ -465,8 +465,8 @@ metadata:
 spec:
   version: "5.7-cluster"
   replicas: 3
-  databaseSecret:
-    secretName: sample-xtradb-cluster-auth
+  authSecret:
+    name: sample-xtradb-cluster-auth
   storageType: Durable
   storage:
     storageClassName: "standard"
@@ -476,14 +476,13 @@ spec:
       requests:
         storage: 1Gi
   init:
-    stashRestoreSession:
-      name: restored-xtradb-cluster-restore
+    waitForInitialRestore: true
   terminationPolicy: WipeOut
 ```
 
 Here,
 
-- `.spec.init.stashRestoreSession.name` specifies the `RestoreSession` CRD name that we will use later to restore the database.
+- `.spec.init.waitForInitialRestore` tells KubeDB to wait for the initial restore to complete before marking this database as ready to use.
 
 Let's create the above database,
 
@@ -515,7 +514,7 @@ metadata:
   name: restored-xtradb-cluster-restore
   namespace: demo
   labels:
-    kubedb.com/kind: PerconaXtraDB # this label is mandatory if you are using KubeDB to deploy the database.
+    app.kubernetes.io/name: perconaxtradbs.kubedb.com # this label is mandatory if you are using KubeDB to deploy the database.
 spec:
   task:
     name: percona-xtradb-restore-{{< param "info.subproject_version" >}}
@@ -547,7 +546,7 @@ spec:
 
 Here,
 
-- `.metadata.labels` specifies a `kubedb.com/kind: PerconaXtraDB` label that is used by KubeDB to watch this RestoreSession object.
+- `.metadata.labels` specifies a `app.kubernetes.io/name: perconaxtradbs.kubedb.com` label that is used by KubeDB to watch this RestoreSession object.
 - `.spec.task.name` specifies the name of the Task CRD that specifies the necessary Functions and their execution order to restore a Percona XtraDB cluster.
 - `.spec.repository.name` specifies the Repository CRD that holds the backend information where our backed up data has been stored.
 - `.spec.target.replicas` specifies the number of PVCs where snapshot data will be restored.
@@ -556,7 +555,7 @@ Here,
 - `.spec.target.volumeMounts` specifies the mount path for the volume. The `mountPath` must be  `/var/lib/mysql` as expected by Percona XtraDB server. And the volume name is form as `"data-<xtradb_crd_object_name>"`. Since for restoring purpose, we have created a PerconaXtraDB object named `restored-xtradb-cluster`, the volume name will be `"data-restored-xtradb-cluster"`.
 - `.spec.rules` specifies that we are restoring data from the `latest` backup snapshot of the database. Empty (`[]`) `targetHosts` means snapshot data will be restored in all specified number of PVCs. And another obvious thing is we want to restore the same data from `host-0` to all PVCs. During the backup procedure, we took backup data as `host-0` from the Percona XtraDB cluster. So, here the source host is `host-0`.
 
-> **Warning:** Label `kubedb.com/kind: PerconaXtraDB` is mandatory if you are using KubeDB to deploy the database. Otherwise, the database will be stuck in **`Initializing`** state.
+> **Warning:** Label `app.kubernetes.io/name: perconaxtradbs.kubedb.com` is mandatory if you are using KubeDB to deploy the database. Otherwise, the database will be stuck in **`Initializing`** state.
 
 Let's create the RestoreSession CRD object we have shown above,
 

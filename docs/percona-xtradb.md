@@ -56,7 +56,7 @@ Let's deploy a sample Percona XtraDB database and insert some data into it.
 Below is the YAML of a sample `PerconaXtraDB` CRD that we are going to create for this tutorial:
 
 ```yaml
-apiVersion: kubedb.com/v1alpha1
+apiVersion: kubedb.com/v1alpha2
 kind: PerconaXtraDB
 metadata:
   name: sample-xtradb
@@ -137,12 +137,12 @@ metadata:
     app.kubernetes.io/managed-by: kubedb.com
     app.kubernetes.io/name: perconaxtradb
     app.kubernetes.io/version: "5.7"
-    kubedb.com/kind: PerconaXtraDB
+    app.kubernetes.io/name: perconaxtradbs.kubedb.com
     kubedb.com/name: sample-xtradb
   name: sample-xtradb
   namespace: demo
   ownerReferences:
-  - apiVersion: kubedb.com/v1alpha1
+  - apiVersion: kubedb.com/v1alpha2
     blockOwnerDeletion: true
     controller: true
     kind: PerconaXtraDB
@@ -181,16 +181,16 @@ The following YAML shows a minimal AppBinding specification that you have to cre
 apiVersion: appcatalog.appscode.com/v1alpha1
 kind: AppBinding
 metadata:
-  name: <my_custom_appbinding_name>
-  namespace: <my_database_namespace>
+  name: your-custom-appbinding-name
+  namespace: your-database-namespace
 spec:
   clientConfig:
     service:
-      name: <my_database_service_name>
-      port: <my_database_port_number>
+      name: your-database-service-name
+      port: 3306
       scheme: mysql
   secret:
-    name: <my_database_credentials_secret_name>
+    name: your-database_credentials_secret_name>
   # type field is optional. you can keep it empty.
   # if you keep it empty then the value of TARGET_APP_RESOURCE variable
   # will be set to "appbinding" during auto-backup.
@@ -448,7 +448,7 @@ Now, we have to deploy the restored database similarly as we have deployed the o
 Below is the YAML for `PerconaXtraDB` CRD we are going deploy to initialize from backup,
 
 ```yaml
-apiVersion: kubedb.com/v1alpha1
+apiVersion: kubedb.com/v1alpha2
 kind: PerconaXtraDB
 metadata:
   name: restored-xtradb
@@ -456,8 +456,8 @@ metadata:
 spec:
   version: "5.7"
   replicas: 1
-  databaseSecret:
-    secretName: sample-xtradb-auth
+  authSecret:
+    name: sample-xtradb-auth
   storageType: Durable
   storage:
     storageClassName: "standard"
@@ -467,8 +467,7 @@ spec:
       requests:
         storage: 1Gi
   init:
-    stashRestoreSession:
-      name: restored-xtradb-restore
+    waitForInitialRestore: true
   terminationPolicy: WipeOut
 ```
 
@@ -515,7 +514,7 @@ metadata:
   name: restored-xtradb-restore
   namespace: demo
   labels:
-    kubedb.com/kind: PerconaXtraDB # this label is mandatory if you are using KubeDB to deploy the database.
+    app.kubernetes.io/name: perconaxtradbs.kubedb.com # this label is mandatory if you are using KubeDB to deploy the database.
 spec:
   task:
     name: percona-xtradb-restore-{{< param "info.subproject_version" >}}
@@ -532,13 +531,13 @@ spec:
 
 Here,
 
-- `.metadata.labels` specifies a `kubedb.com/kind: PerconaXtraDB` label that is used by KubeDB to watch this RestoreSession object.
+- `.metadata.labels` specifies a `app.kubernetes.io/name: perconaxtradbs.kubedb.com` label that is used by KubeDB to watch this RestoreSession object.
 - `.spec.task.name` specifies the name of the Task CRD that specifies the necessary Functions and their execution order to restore a Percona XtraDB database.
 - `.spec.repository.name` specifies the Repository CRD that holds the backend information where our backed up data has been stored.
 - `.spec.target.ref` refers to the  AppBinding object for the `restored-xtradb` PerconaXtraDB object.
 - `.spec.rules` specifies that we are restoring data from the `latest` backup snapshot of the database.
 
-> **Warning:** Label `kubedb.com/kind: PerconaXtraDB` is mandatory if you are using KubeDB to deploy the database. Otherwise, the database will be stuck in **`Initializing`** state.
+> **Warning:** Label `app.kubernetes.io/name: perconaxtradbs.kubedb.com` is mandatory if you are using KubeDB to deploy the database. Otherwise, the database will be stuck in **`Initializing`** state.
 
 Let's create the RestoreSession CRD object we have shown above,
 
