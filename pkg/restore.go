@@ -154,6 +154,7 @@ func (opt *perconaOptions) restorePerconaXtraDB(targetRef api_v1beta1.TargetRef)
 		return nil, err
 	}
 
+	var restoreCmd restic.Command
 	if opt.targetAppReplicas == 1 {
 		// get app binding
 		appBinding, err := opt.catalogClient.AppcatalogV1alpha1().AppBindings(opt.namespace).Get(context.TODO(), opt.appBindingName, metav1.GetOptions{})
@@ -179,7 +180,7 @@ func (opt *perconaOptions) restorePerconaXtraDB(targetRef api_v1beta1.TargetRef)
 		opt.dumpOptions.FileName = mySqlDumpFile
 
 		// setup pipe command
-		opt.dumpOptions.StdoutPipeCommand = restic.Command{
+		restoreCmd = restic.Command{
 			Name: mySqlRestoreCMD,
 			Args: []interface{}{
 				"-u", string(appBindingSecret.Data[mySqlUser]),
@@ -188,10 +189,10 @@ func (opt *perconaOptions) restorePerconaXtraDB(targetRef api_v1beta1.TargetRef)
 		}
 		// if port is specified, append port in the arguments
 		if appBinding.Spec.ClientConfig.Service.Port != 0 {
-			opt.dumpOptions.StdoutPipeCommand.Args = append(opt.dumpOptions.StdoutPipeCommand.Args, fmt.Sprintf("--port=%d", appBinding.Spec.ClientConfig.Service.Port))
+			restoreCmd.Args = append(restoreCmd.Args, fmt.Sprintf("--port=%d", appBinding.Spec.ClientConfig.Service.Port))
 		}
 		for _, arg := range strings.Fields(opt.xtradbArgs) {
-			opt.dumpOptions.StdoutPipeCommand.Args = append(opt.dumpOptions.StdoutPipeCommand.Args, arg)
+			restoreCmd.Args = append(restoreCmd.Args, arg)
 		}
 		// wait for DB ready
 		waitForDBReady(appBinding.Spec.ClientConfig.Service.Name, appBinding.Spec.ClientConfig.Service.Port, opt.waitTimeout)
@@ -200,7 +201,7 @@ func (opt *perconaOptions) restorePerconaXtraDB(targetRef api_v1beta1.TargetRef)
 		opt.dumpOptions.FileName = xtraBackupStreamFile
 
 		// setup pipe command
-		opt.dumpOptions.StdoutPipeCommand = restic.Command{
+		restoreCmd = restic.Command{
 			Name: "bash",
 			Args: []interface{}{
 				"-c",
@@ -208,6 +209,9 @@ func (opt *perconaOptions) restorePerconaXtraDB(targetRef api_v1beta1.TargetRef)
 			},
 		}
 	}
+
+	// add restore command to the pipeline
+	opt.dumpOptions.StdoutPipeCommands = append(opt.dumpOptions.StdoutPipeCommands, restoreCmd)
 
 	// Run dump
 	return resticWrapper.Dump(opt.dumpOptions, targetRef)

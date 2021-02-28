@@ -209,13 +209,14 @@ func (opt *perconaOptions) backupPerconaXtraDB(targetRef api_v1beta1.TargetRef) 
 		return nil, err
 	}
 
+	var backupCmd restic.Command
 	if opt.garbdCnf.Group == "" { // standalone database
 		opt.backupOptions.StdinFileName = mySqlDumpFile
 
 		// set env for mysqlbdump
 		resticWrapper.SetEnv(envMySqlPassword, string(appBindingSecret.Data[mySqlPassword]))
-		// setup pipe command
-		opt.backupOptions.StdinPipeCommand = restic.Command{
+		// setup backup command
+		backupCmd = restic.Command{
 			Name: mySqlDumpCMD,
 			Args: []interface{}{
 				"-u", string(appBindingSecret.Data[mySqlUser]),
@@ -224,10 +225,10 @@ func (opt *perconaOptions) backupPerconaXtraDB(targetRef api_v1beta1.TargetRef) 
 		}
 		// if port is specified, append port in the arguments
 		if appBinding.Spec.ClientConfig.Service.Port != 0 {
-			opt.backupOptions.StdinPipeCommand.Args = append(opt.backupOptions.StdinPipeCommand.Args, fmt.Sprintf("--port=%d", appBinding.Spec.ClientConfig.Service.Port))
+			backupCmd.Args = append(backupCmd.Args, fmt.Sprintf("--port=%d", appBinding.Spec.ClientConfig.Service.Port))
 		}
 		for _, arg := range strings.Fields(opt.xtradbArgs) {
-			opt.backupOptions.StdinPipeCommand.Args = append(opt.backupOptions.StdinPipeCommand.Args, arg)
+			backupCmd.Args = append(backupCmd.Args, arg)
 		}
 	} else { // clustered database
 		opt.backupOptions.StdinFileName = xtraBackupStreamFile
@@ -238,7 +239,7 @@ func (opt *perconaOptions) backupPerconaXtraDB(targetRef api_v1beta1.TargetRef) 
 			kubedbconfig_api.GarbdXtrabackupSSTRequestSuffix,
 		)
 
-		opt.backupOptions.StdinPipeCommand = restic.Command{
+		backupCmd = restic.Command{
 			Name: "bash",
 			Args: []interface{}{
 				"-c",
@@ -255,6 +256,9 @@ func (opt *perconaOptions) backupPerconaXtraDB(targetRef api_v1beta1.TargetRef) 
 
 	// wait for DB ready
 	waitForDBReady(appBinding.Spec.ClientConfig.Service.Name, appBinding.Spec.ClientConfig.Service.Port, opt.waitTimeout)
+
+	// append the backup command to the pipeline
+	opt.backupOptions.StdinPipeCommands = append(opt.backupOptions.StdinPipeCommands, backupCmd)
 
 	// Run backup
 	return resticWrapper.RunBackup(opt.backupOptions, targetRef)
