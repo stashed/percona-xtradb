@@ -4,7 +4,7 @@ metadata:
   name: restored-xtradb-cluster-restore
   namespace: demo
   labels:
-    kubedb.com/kind: PerconaXtraDB # this label is mandatory if you are using KubeDB to deploy the database.
+    app.kubernetes.io/name: perconaxtradbs.kubedb.com # this label is mandatory if you are using KubeDB to deploy the database.
 spec:
   task:
     name: percona-xtradb-restore-5.7.0-v1

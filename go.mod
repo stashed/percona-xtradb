@@ -16,13 +16,13 @@ require (
 	k8s.io/apimachinery v0.18.9
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6
-	kmodules.xyz/client-go v0.0.0-20210118094617-273ba20ad7ca
+	kmodules.xyz/client-go v0.0.0-20210218100652-8f345ddfe801
 	kmodules.xyz/crd-schema-fuzz v0.0.0-20200922204806-c1426cd7fcf4
-	kmodules.xyz/custom-resources v0.0.0-20201124062543-bd8d35c21b0c
-	kmodules.xyz/offshoot-api v0.0.0-20201105074700-8675f5f686f2
+	kmodules.xyz/custom-resources v0.0.0-20210222100152-7426e3678989
+	kmodules.xyz/offshoot-api v0.0.0-20210218144050-e1d794cb382a
 	kubedb.dev/apimachinery v0.14.0-beta.2
 	sigs.k8s.io/yaml v1.2.0
-	stash.appscode.dev/apimachinery v0.11.8
+	stash.appscode.dev/apimachinery v0.11.10-0.20210223054644-c403645d9bc1
 )
 
 replace bitbucket.org/ww/goautoneg => gomodules.xyz/goautoneg v0.0.0-20120707110453-a547fc61f48d
