@@ -10,11 +10,11 @@ repository:
   name: appscode
 chart:
   name: stash-percona-xtradb
-  version: v2020.12.17
+  version: v2021.03.08
   values: "-- generate from values file --"
   valuesExample: "-- generate from values file --"
 prerequisites:
 - Kubernetes 1.11+
 release:
-  name: stash-percona-xtradb-v2020.12.17
+  name: stash-percona-xtradb-v2021.03.08
   namespace: kube-system
