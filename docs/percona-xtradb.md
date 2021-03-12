@@ -159,6 +159,15 @@ spec:
     url: tcp(sample-xtradb:3306)/
   secret:
     name: sample-xtradb-auth
+  parameters:
+    apiVersion: config.kubedb.com/v1alpha2
+    kind: GaleraArbitratorConfiguration
+    stash:
+      addon:
+        backupTask:
+          name: percona-xtradb-backup-{{< param "info.subproject_version" >}}
+        restoreTask:
+          name: percona-xtradb-restore-{{< param "info.subproject_version" >}}
   type: kubedb.com/perconaxtradb
   version: "5.7"
 ```
@@ -167,6 +176,7 @@ Stash uses the AppBinding CRD to connect with the target database. It requires t
 
 - `.spec.clientConfig.service.name` specifies the name of the Service that connects to the database.
 - `.spec.secret` specifies the name of the Secret that holds the necessary credentials to access the database.
+- `spec.parameters.stash` contains the addon information that will be used for backup and restore this database.
 - `.spec.type` specifies the type of the app that this AppBinding is pointing to. The format KubeDB generated AppBinding follows to set the value of `.spec.type` is `<app_group>/<app_resource_type>`.
 
 #### Creating AppBinding Manually
@@ -332,8 +342,8 @@ metadata:
   namespace: demo
 spec:
   schedule: "*/5 * * * *"
-  task:
-    name: percona-xtradb-backup-{{< param "info.subproject_version" >}}
+  # task: # Uncomment if you are not using KubeDB to deploy your database
+  #   name: percona-xtradb-backup-{{< param "info.subproject_version" >}}
   repository:
     name: gcs-repo-sample-xtradb
   target:
@@ -441,7 +451,7 @@ Notice the `PAUSED` column. Value `true` for this field means that the BackupCon
 Now, we have to deploy the restored database similarly as we have deployed the original `sample-xtradb` database. However, this time there will be the following differences:
 
 - We have to use the same secret that was used in the original database. We are going to specify it using `.spec.databaseSecret` field.
-- We have to specify `.spec.init` section to tell KubeDB that we are going to use Stash to initialize this database from backup. KubeDB will keep the database phase to **`Initializing`** until Stash finishes its initialization.
+- We are going to specify `.spec.init.waitForInitialRestore` field to tell KubeDB that it should wait for the first restore to complete before marking this database as ready to use.
 
 Below is the YAML for `PerconaXtraDB` CRD we are going deploy to initialize from backup,
 
@@ -469,10 +479,6 @@ spec:
   terminationPolicy: WipeOut
 ```
 
-Here,
-
-- `.spec.init.stashRestoreSession.name` specifies the `RestoreSession` CRD name that we will use later to restore the database.
-
 Let's create the above database,
 
 ```bash
@@ -480,13 +486,13 @@ $ kubectl apply -f https://github.com/stashed/percona-xtradb/raw/{{< param "info
 perconaxtradb.kubedb.com/restored-xtradb created
 ```
 
-If you check the database status, you will see it is stuck in **`Initializing`** state.
+If you check the database status, you will see it is stuck in **`Provisioning`** state.
 
 ```bash
 $ kubectl get px -n demo restored-xtradb --watch
 NAME              VERSION   STATUS         AGE
 restored-xtradb   5.7       Creating       42s
-restored-xtradb   5.7       Initializing   74s
+restored-xtradb   5.7       Provisioning   74s
 ```
 
 #### Create RestoreSession
@@ -511,8 +517,6 @@ kind: RestoreSession
 metadata:
   name: restored-xtradb-restore
   namespace: demo
-  labels:
-    app.kubernetes.io/name: perconaxtradbs.kubedb.com # this label is mandatory if you are using KubeDB to deploy the database.
 spec:
   task:
     name: percona-xtradb-restore-{{< param "info.subproject_version" >}}
@@ -529,13 +533,10 @@ spec:
 
 Here,
 
-- `.metadata.labels` specifies a `app.kubernetes.io/name: perconaxtradbs.kubedb.com` label that is used by KubeDB to watch this RestoreSession object.
 - `.spec.task.name` specifies the name of the Task CRD that specifies the necessary Functions and their execution order to restore a Percona XtraDB database.
 - `.spec.repository.name` specifies the Repository CRD that holds the backend information where our backed up data has been stored.
 - `.spec.target.ref` refers to the  AppBinding object for the `restored-xtradb` PerconaXtraDB object.
 - `.spec.rules` specifies that we are restoring data from the `latest` backup snapshot of the database.
-
-> **Warning:** Label `app.kubernetes.io/name: perconaxtradbs.kubedb.com` is mandatory if you are using KubeDB to deploy the database. Otherwise, the database will be stuck in **`Initializing`** state.
 
 Let's create the RestoreSession CRD object we have shown above,
 
@@ -566,7 +567,7 @@ At first, check if the database has gone into **`Running`** state,
 ```bash
 $ kubectl get px -n demo restored-xtradb --watch
 NAME              VERSION   STATUS         AGE
-restored-xtradb   5.7       Initializing   10m
+restored-xtradb   5.7       Provisioning   10m
 restored-xtradb   5.7       Running        13m
 ```
 

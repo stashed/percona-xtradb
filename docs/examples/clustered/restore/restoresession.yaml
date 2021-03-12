@@ -3,11 +3,9 @@ kind: RestoreSession
 metadata:
   name: restored-xtradb-cluster-restore
   namespace: demo
-  labels:
-    app.kubernetes.io/name: perconaxtradbs.kubedb.com # this label is mandatory if you are using KubeDB to deploy the database.
 spec:
-  task:
-    name: percona-xtradb-restore-v2021.03.08
+  # task: # Uncomment if you are not using KubeDB to deploy your database. Use appropriate Task version.
+  #   name: percona-xtradb-restore-v2021.03.08
   repository:
     name: gcs-repo-xtradb-cluster
   target:

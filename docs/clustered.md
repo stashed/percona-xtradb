@@ -160,6 +160,12 @@ spec:
     group: sample-xtradb-cluster
     kind: GaleraArbitratorConfiguration
     sstMethod: xtrabackup-v2
+    stash:
+      addon:
+        backupTask:
+          name: percona-xtradb-backup-{{< param "info.subproject_version" >}}
+        restoreTask:
+          name: percona-xtradb-restore-{{< param "info.subproject_version" >}}
   secret:
     name: sample-xtradb-cluster-auth
   type: kubedb.com/perconaxtradb
@@ -170,6 +176,7 @@ Stash uses the AppBinding CRD to connect with the target database. It requires t
 
 - `.spec.clientConfig.service.name` specifies the name of the Service that connects to the database.
 - `.spec.secret` specifies the name of the Secret that holds the necessary credentials to access the database.
+- `spec.parameters.stash` contains the Stash Addon info which will be used to backup and restore this database.
 - `.spec.type` specifies the type of the app that this AppBinding is pointing to. The format KubeDB generated AppBinding follows to set the value of `.spec.type` is `<app_group>/<app_resource_type>`.
 
 #### Creating AppBinding Manually
@@ -345,8 +352,8 @@ metadata:
   namespace: demo
 spec:
   schedule: "*/5 * * * *"
-  task:
-    name: percona-xtradb-backup-{{< param "info.subproject_version" >}}
+  # task: # Uncomment if you are not using KubeDB to deploy your database.
+  #   name: percona-xtradb-backup-{{< param "info.subproject_version" >}}
   repository:
     name: gcs-repo-xtradb-cluster
   target:
@@ -450,7 +457,7 @@ Notice the `PAUSED` column. Value `true` for this field means that the BackupCon
 Now, we have to deploy the restored database similarly as we have deployed the original `sample-xtradb-cluster` database. However, this time there will be the following differences:
 
 - We have to use the same secret that was used in the original database. We are going to specify it using `.spec.databaseSecret` field.
-- We have to specify `.spec.init` section to tell KubeDB that we are going to use Stash to initialize this database from backup. KubeDB will keep the database phase to **`Initializing`** until Stash finishes its initialization.
+- We have to specify `.spec.init.waitForInitialRestore` field to tell KubeDB to wait for first restore to complete before marking this database as ready to use.
 
 Below is the YAML for `PerconaXtraDB` CRD we are going deploy to initialize from backup,
 
@@ -478,10 +485,6 @@ spec:
   terminationPolicy: WipeOut
 ```
 
-Here,
-
-- `.spec.init.waitForInitialRestore` tells KubeDB to wait for the initial restore to complete before marking this database as ready to use.
-
 Let's create the above database,
 
 ```bash
@@ -489,12 +492,12 @@ $ kubectl apply -f https://github.com/stashed/percona-xtradb/raw/{{< param "info
 perconaxtradb.kubedb.com/restored-xtradb-cluster created
 ```
 
-If you check the database status, you will see it is stuck in **`Initializing`** state.
+If you check the database status, you will see it is stuck in **`Provisioning`** state.
 
 ```bash
 $ kubectl get px -n demo restored-xtradb-cluster
 NAME                      VERSION       STATUS         AGE
-restored-xtradb-cluster   5.7-cluster   Initializing   4m10s
+restored-xtradb-cluster   5.7-cluster   Provisioning   4m10s
 ```
 
 #### Create RestoreSession
@@ -511,11 +514,9 @@ kind: RestoreSession
 metadata:
   name: restored-xtradb-cluster-restore
   namespace: demo
-  labels:
-    app.kubernetes.io/name: perconaxtradbs.kubedb.com # this label is mandatory if you are using KubeDB to deploy the database.
 spec:
-  task:
-    name: percona-xtradb-restore-{{< param "info.subproject_version" >}}
+  # task: # Uncomment if you are not using KubeDB to deploy your database.
+  #   name: percona-xtradb-restore-{{< param "info.subproject_version" >}}
   repository:
     name: gcs-repo-xtradb-cluster
   target:
@@ -544,7 +545,6 @@ spec:
 
 Here,
 
-- `.metadata.labels` specifies a `app.kubernetes.io/name: perconaxtradbs.kubedb.com` label that is used by KubeDB to watch this RestoreSession object.
 - `.spec.task.name` specifies the name of the Task CRD that specifies the necessary Functions and their execution order to restore a Percona XtraDB cluster.
 - `.spec.repository.name` specifies the Repository CRD that holds the backend information where our backed up data has been stored.
 - `.spec.target.replicas` specifies the number of PVCs where snapshot data will be restored.
@@ -552,8 +552,6 @@ Here,
 - `.spec.target.volumeClaimTemplates` specifies the template used for the PVCs. The important thing here is the `.metadata.name`. In KubeDB side, the PVC name is formed by following the rule `data-<xtradb_crd_object_name>-<statefulset_pod_ordinal>`. Since we have created our restore database named `restored-xtradb-cluster` and later KubeDB will create a StatefulSet for this database, the PVC names will be `data-restored-xtradb-cluster-0`, `data-restored-xtradb-cluster-1`, `data-restored-xtradb-cluster-2`, etc. up to the number of replicas. Here Stash operator will create these PVCs by following the same convention as KubeDB. We just need to provide the `.metadata.name` as `data-<xtradb_crd_object_name>-${POD_ORDINAL}`. You must insert `${POD_ORDINAL}` at the end of the name. Stash will create the required PVCs by replacing this with the corresponding pod index. That means if the value of `.spec.target.replicas` is 3, then Stash will create 3 PVCs named `data-restored-xtradb-cluster-0`, `data-restored-xtradb-cluster-1`, and `data-restored-xtradb-cluster-2`.
 - `.spec.target.volumeMounts` specifies the mount path for the volume. The `mountPath` must be  `/var/lib/mysql` as expected by Percona XtraDB server. And the volume name is form as `"data-<xtradb_crd_object_name>"`. Since for restoring purpose, we have created a PerconaXtraDB object named `restored-xtradb-cluster`, the volume name will be `"data-restored-xtradb-cluster"`.
 - `.spec.rules` specifies that we are restoring data from the `latest` backup snapshot of the database. Empty (`[]`) `targetHosts` means snapshot data will be restored in all specified number of PVCs. And another obvious thing is we want to restore the same data from `host-0` to all PVCs. During the backup procedure, we took backup data as `host-0` from the Percona XtraDB cluster. So, here the source host is `host-0`.
-
-> **Warning:** Label `app.kubernetes.io/name: perconaxtradbs.kubedb.com` is mandatory if you are using KubeDB to deploy the database. Otherwise, the database will be stuck in **`Initializing`** state.
 
 Let's create the RestoreSession CRD object we have shown above,
 
@@ -586,8 +584,8 @@ At first, check if the database has gone into **`Running`** state,
 ```bash
 $ kubectl get px -n demo restored-xtradb-cluster --watch
 NAME                      VERSION       STATUS         AGE
-restored-xtradb-cluster   5.7-cluster   Initializing   3m36s
-restored-xtradb-cluster   5.7-cluster   Initializing   4m4s
+restored-xtradb-cluster   5.7-cluster   Provisioning   3m36s
+restored-xtradb-cluster   5.7-cluster   Provisioning   4m4s
 restored-xtradb-cluster   5.7-cluster   Running        4m4s
 ```
 
