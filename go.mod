@@ -3,25 +3,16 @@ module stash.appscode.dev/percona-xtradb
 go 1.12
 
 require (
-	github.com/go-openapi/spec v0.19.8
-	github.com/gogo/protobuf v1.3.1
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-	github.com/google/gofuzz v1.1.0
+	github.com/go-openapi/spec v0.19.8 // indirect
 	github.com/spf13/cobra v1.1.1
-	github.com/yudai/gojsondiff v1.0.0
 	go.bytebuilders.dev/license-verifier/kubernetes v0.7.0
-	gomodules.xyz/runtime v0.0.0-20201104200926-d838b09dda8b
 	gomodules.xyz/x v0.0.0-20201105065653-91c568df6331
-	k8s.io/apiextensions-apiserver v0.18.9
 	k8s.io/apimachinery v0.18.9
 	k8s.io/client-go v12.0.0+incompatible
-	k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6
 	kmodules.xyz/client-go v0.0.0-20210218100652-8f345ddfe801
-	kmodules.xyz/crd-schema-fuzz v0.0.0-20200922204806-c1426cd7fcf4
 	kmodules.xyz/custom-resources v0.0.0-20210222100152-7426e3678989
 	kmodules.xyz/offshoot-api v0.0.0-20210218144050-e1d794cb382a
 	kubedb.dev/apimachinery v0.14.0-beta.2
-	sigs.k8s.io/yaml v1.2.0
 	stash.appscode.dev/apimachinery v0.11.10
 )
 
