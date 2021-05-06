@@ -5,16 +5,16 @@ go 1.15
 require (
 	github.com/spf13/cobra v1.1.3
 	go.bytebuilders.dev/license-verifier/kubernetes v0.9.1
-	gomodules.xyz/x v0.0.3
+	gomodules.xyz/kglog v0.0.1
+	gomodules.xyz/x v0.0.4
 	k8s.io/apimachinery v0.21.0
 	k8s.io/client-go v0.21.0
 	k8s.io/klog/v2 v2.8.0
-	kmodules.xyz/client-go v0.0.0-20210504024435-1eb80721e9b8
+	kmodules.xyz/client-go v0.0.0-20210505231546-fa4fb8e1d04e
 	kmodules.xyz/custom-resources v0.0.0-20210504034124-54c54fcdb690
 	kmodules.xyz/offshoot-api v0.0.0-20210504040651-7951e351f0f5
-	kubedb.dev/apimachinery v0.18.1-0.20210504170625-e725873d4e41
-	stash.appscode.dev/apimachinery v0.13.1-0.20210504142328-ae1654642a82
-
+	kubedb.dev/apimachinery v0.18.1-0.20210506003355-e982e5902ad2
+	stash.appscode.dev/apimachinery v0.13.1-0.20210505235659-974fc12c7593
 )
 
 replace bitbucket.org/ww/goautoneg => gomodules.xyz/goautoneg v0.0.0-20120707110453-a547fc61f48d
