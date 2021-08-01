@@ -1,7 +1,7 @@
 [![Go Report Card](https://goreportcard.com/badge/stash.appscode.dev/percona-xtradb)](https://goreportcard.com/report/stash.appscode.dev/percona-xtradb)
 ![CI](https://github.com/stashed/percona-xtradb/workflows/CI/badge.svg)
 [![Docker Pulls](https://img.shields.io/docker/pulls/stashed/stash-percona-xtradb.svg)](https://hub.docker.com/r/stashed/stash-percona-xtradb/)
-[![Slack](https://slack.appscode.com/badge.svg)](https://slack.appscode.com)
+[![Slack](https://shields.io/badge/Join_Slack-salck?color=4A154B&logo=slack)](https://slack.appscode.com)
 [![Twitter](https://img.shields.io/twitter/follow/kubestash.svg?style=social&logo=twitter&label=Follow)](https://twitter.com/intent/follow?screen_name=KubeStash)
 
 # Percona XtraDB
