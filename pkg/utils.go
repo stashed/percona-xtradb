@@ -26,6 +26,7 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
+	kmapi "kmodules.xyz/client-go/api/v1"
 	appcatalog_cs "kmodules.xyz/custom-resources/client/clientset/versioned"
 	kubedbconfig_api "kubedb.dev/apimachinery/apis/config/v1alpha1"
 )
@@ -52,6 +53,7 @@ type perconaOptions struct {
 	backupSessionName string
 	appBindingName    string
 	outputDir         string
+	storageSecret     kmapi.ObjectReference
 	xtradbArgs        string
 	garbdCnf          kubedbconfig_api.GaleraArbitratorConfiguration
 	socatRetry        int32
