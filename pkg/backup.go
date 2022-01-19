@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	api_v1beta1 "stash.appscode.dev/apimachinery/apis/stash/v1beta1"
 	stash "stash.appscode.dev/apimachinery/client/clientset/versioned"
@@ -191,16 +190,6 @@ func (opt *perconaOptions) backupPerconaXtraDB(targetRef api_v1beta1.TargetRef) 
 		return nil, err
 	}
 
-	appBindingSecret, err := opt.kubeClient.CoreV1().Secrets(opt.namespace).Get(context.TODO(), appBinding.Spec.Secret.Name, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	err = appBinding.TransformSecret(opt.kubeClient, appBindingSecret.Data)
-	if err != nil {
-		return nil, err
-	}
-
 	// galera arbitrator config
 	if appBinding.Spec.Parameters != nil {
 		err = json.Unmarshal(appBinding.Spec.Parameters.Raw, &opt.garbdCnf)
@@ -209,52 +198,31 @@ func (opt *perconaOptions) backupPerconaXtraDB(targetRef api_v1beta1.TargetRef) 
 		}
 	}
 
-	resticWrapper, err := restic.NewResticWrapper(opt.setupOptions)
-	if err != nil {
-		return nil, err
-	}
+	session := opt.newSessionWrapper()
 
-	hostname, err := appBinding.Hostname()
-	if err != nil {
-		return nil, err
-	}
-
-	port, err := appBinding.Port()
-	if err != nil {
-		return nil, err
-	}
-
-	var backupCmd restic.Command
 	if opt.garbdCnf.Group == "" { // standalone database
 		opt.backupOptions.StdinFileName = mySqlDumpFile
+		session.cmd.Name = mySqlDumpCMD
+		err = session.setDatabaseCredentials(opt.kubeClient, appBinding)
+		if err != nil {
+			return nil, err
+		}
 
-		// set env for mysqlbdump
-		resticWrapper.SetEnv(envMySqlPassword, string(appBindingSecret.Data[mySqlPassword]))
-		// setup backup command
-		backupCmd = restic.Command{
-			Name: mySqlDumpCMD,
-			Args: []interface{}{
-				"-u", string(appBindingSecret.Data[mySqlUser]),
-				"-h", hostname,
-			},
+		err = session.setDatabaseConnectionParameters(appBinding)
+		if err != nil {
+			return nil, err
 		}
-		// if port is specified, append port in the arguments
-		if port != 0 {
-			backupCmd.Args = append(backupCmd.Args, fmt.Sprintf("--port=%d", port))
-		}
-		for _, arg := range strings.Fields(opt.xtradbArgs) {
-			backupCmd.Args = append(backupCmd.Args, arg)
-		}
+
+		session.setUserArgs(opt.xtradbArgs)
 	} else { // clustered database
 		opt.backupOptions.StdinFileName = xtraBackupStreamFile
-
 		sstRequestOpts := fmt.Sprintf("%s,%d,%s",
 			opt.garbdCnf.SSTMethod,
 			kubedbconfig_api.GarbdListenPort,
 			kubedbconfig_api.GarbdXtrabackupSSTRequestSuffix,
 		)
 
-		backupCmd = restic.Command{
+		session.cmd = &restic.Command{
 			Name: "bash",
 			Args: []interface{}{
 				"-c",
@@ -269,12 +237,17 @@ func (opt *perconaOptions) backupPerconaXtraDB(targetRef api_v1beta1.TargetRef) 
 		}
 	}
 
-	// wait for DB ready
-	waitForDBReady(hostname, port, opt.waitTimeout)
+	err = waitForDBReady(appBinding, opt.waitTimeout)
+	if err != nil {
+		return nil, err
+	}
 
 	// append the backup command to the pipeline
-	opt.backupOptions.StdinPipeCommands = append(opt.backupOptions.StdinPipeCommands, backupCmd)
+	opt.backupOptions.StdinPipeCommands = append(opt.backupOptions.StdinPipeCommands, *session.cmd)
+	resticWrapper, err := restic.NewResticWrapperFromShell(opt.setupOptions, session.sh)
+	if err != nil {
+		return nil, err
+	}
 
-	// Run backup
 	return resticWrapper.RunBackup(opt.backupOptions, targetRef)
 }

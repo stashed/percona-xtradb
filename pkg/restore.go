@@ -18,9 +18,7 @@ package pkg
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
-	"strings"
 
 	api_v1beta1 "stash.appscode.dev/apimachinery/apis/stash/v1beta1"
 	"stash.appscode.dev/apimachinery/pkg/restic"
@@ -154,12 +152,8 @@ func (opt *perconaOptions) restorePerconaXtraDB(targetRef api_v1beta1.TargetRef)
 		return nil, err
 	}
 
-	resticWrapper, err := restic.NewResticWrapper(opt.setupOptions)
-	if err != nil {
-		return nil, err
-	}
+	session := opt.newSessionWrapper()
 
-	var restoreCmd restic.Command
 	if opt.targetAppReplicas == 1 {
 
 		appBinding, err := opt.catalogClient.AppcatalogV1alpha1().AppBindings(opt.namespace).Get(context.TODO(), opt.appBindingName, metav1.GetOptions{})
@@ -167,55 +161,31 @@ func (opt *perconaOptions) restorePerconaXtraDB(targetRef api_v1beta1.TargetRef)
 			return nil, err
 		}
 
-		appBindingSecret, err := opt.kubeClient.CoreV1().Secrets(opt.namespace).Get(context.TODO(), appBinding.Spec.Secret.Name, metav1.GetOptions{})
-		if err != nil {
-			return nil, err
-		}
-
-		err = appBinding.TransformSecret(opt.kubeClient, appBindingSecret.Data)
-		if err != nil {
-			return nil, err
-		}
-
-		// set env for mysql
-		resticWrapper.SetEnv(envMySqlPassword, string(appBindingSecret.Data[mySqlPassword]))
-
 		// set backed up file name
 		opt.dumpOptions.FileName = mySqlDumpFile
-
-		hostname, err := appBinding.Hostname()
+		session.cmd.Name = mySqlRestoreCMD
+		err = session.setDatabaseConnectionParameters(appBinding)
 		if err != nil {
 			return nil, err
 		}
 
-		port, err := appBinding.Port()
+		err = session.setDatabaseCredentials(opt.kubeClient, appBinding)
 		if err != nil {
 			return nil, err
 		}
 
-		// setup pipe command
-		restoreCmd = restic.Command{
-			Name: mySqlRestoreCMD,
-			Args: []interface{}{
-				"-u", string(appBindingSecret.Data[mySqlUser]),
-				"-h", hostname,
-			},
+		session.setUserArgs(opt.xtradbArgs)
+
+		err = waitForDBReady(appBinding, opt.waitTimeout)
+		if err != nil {
+			return nil, err
 		}
-		// if port is specified, append port in the arguments
-		if port != 0 {
-			restoreCmd.Args = append(restoreCmd.Args, fmt.Sprintf("--port=%d", port))
-		}
-		for _, arg := range strings.Fields(opt.xtradbArgs) {
-			restoreCmd.Args = append(restoreCmd.Args, arg)
-		}
-		// wait for DB ready
-		waitForDBReady(hostname, port, opt.waitTimeout)
 	} else {
 		// set backed up file name
 		opt.dumpOptions.FileName = xtraBackupStreamFile
 
 		// setup pipe command
-		restoreCmd = restic.Command{
+		session.cmd = &restic.Command{
 			Name: "bash",
 			Args: []interface{}{
 				"-c",
@@ -225,8 +195,11 @@ func (opt *perconaOptions) restorePerconaXtraDB(targetRef api_v1beta1.TargetRef)
 	}
 
 	// add restore command to the pipeline
-	opt.dumpOptions.StdoutPipeCommands = append(opt.dumpOptions.StdoutPipeCommands, restoreCmd)
-
+	opt.dumpOptions.StdoutPipeCommands = append(opt.dumpOptions.StdoutPipeCommands, *session.cmd)
+	resticWrapper, err := restic.NewResticWrapperFromShell(opt.setupOptions, session.sh)
+	if err != nil {
+		return nil, err
+	}
 	// Run dump
 	return resticWrapper.Dump(opt.dumpOptions, targetRef)
 }
