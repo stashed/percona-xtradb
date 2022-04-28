@@ -54,16 +54,17 @@ type perconaOptions struct {
 	stashClient   stash.Interface
 	catalogClient appcatalog_cs.Interface
 
-	namespace         string
-	backupSessionName string
-	appBindingName    string
-	outputDir         string
-	storageSecret     kmapi.ObjectReference
-	xtradbArgs        string
-	garbdCnf          kubedbconfig_api.GaleraArbitratorConfiguration
-	socatRetry        int32
-	targetAppReplicas int32
-	waitTimeout       int32
+	namespace           string
+	backupSessionName   string
+	appBindingName      string
+	appBindingNamespace string
+	outputDir           string
+	storageSecret       kmapi.ObjectReference
+	xtradbArgs          string
+	garbdCnf            kubedbconfig_api.GaleraArbitratorConfiguration
+	socatRetry          int32
+	targetAppReplicas   int32
+	waitTimeout         int32
 
 	setupOptions  restic.SetupOptions
 	backupOptions restic.BackupOptions
