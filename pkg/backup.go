@@ -186,7 +186,7 @@ func (opt *perconaOptions) backupPerconaXtraDB(targetRef api_v1beta1.TargetRef) 
 	if err != nil {
 		return nil, err
 	}
-	
+
 	appBinding, err := opt.catalogClient.AppcatalogV1alpha1().AppBindings(opt.appBindingNamespace).Get(context.TODO(), opt.appBindingName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
