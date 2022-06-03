@@ -28,6 +28,7 @@ import (
 	"gomodules.xyz/flags"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	appcatalog "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
 	appcatalog_cs "kmodules.xyz/custom-resources/client/clientset/versioned"
@@ -82,7 +83,7 @@ func NewCmdRestore() *cobra.Command {
 				Namespace:  opt.appBindingNamespace,
 			}
 			var restoreOutput *restic.RestoreOutput
-			restoreOutput, err = opt.restorePerconaXtraDB(targetRef)
+			restoreOutput, err = opt.restorePerconaXtraDB(targetRef, config)
 			if err != nil {
 				restoreOutput = &restic.RestoreOutput{
 					RestoreTargetStatus: api_v1beta1.RestoreMemberStatus{
@@ -137,8 +138,13 @@ func NewCmdRestore() *cobra.Command {
 	return cmd
 }
 
-func (opt *perconaOptions) restorePerconaXtraDB(targetRef api_v1beta1.TargetRef) (*restic.RestoreOutput, error) {
+func (opt *perconaOptions) restorePerconaXtraDB(targetRef api_v1beta1.TargetRef, config *restclient.Config) (*restic.RestoreOutput, error) {
 	var err error
+	err = license.CheckLicenseEndpoint(config, licenseApiService, SupportedProducts)
+	if err != nil {
+		return nil, err
+	}
+
 	opt.setupOptions.StorageSecret, err = opt.kubeClient.CoreV1().Secrets(opt.storageSecret.Namespace).Get(context.TODO(), opt.storageSecret.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
