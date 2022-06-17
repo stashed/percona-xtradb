@@ -34,26 +34,35 @@ LABEL org.opencontainers.image.source https://github.com/stashed/percona-xtradb
 RUN set -e; \
   apt-get update; \
   apt-get install --no-install-recommends --yes \
-    apt-transport-https \
-    ca-certificates pwgen wget netcat socat \
+    apt-transport-https ca-certificates\
+    pwgen curl wget gnupg2 netcat socat lsb-release\
   && rm -rf /var/lib/apt/lists/*
 
-RUN wget https://repo.percona.com/apt/percona-release_0.1-6.jessie_all.deb \
-  && dpkg -i percona-release_0.1-6.jessie_all.deb
+RUN wget https://repo.percona.com/apt/percona-release_latest.generic_all.deb \
+  && dpkg -i percona-release_latest.generic_all.deb \
+  && rm percona-release_latest.generic_all.deb
 
-RUN apt-get update \
-  && apt-get install --no-install-recommends --yes \
-  percona-xtrabackup-24 percona-xtradb-cluster-garbd-5.7 percona-server-client-5.7 \
-  qpress \
-  && rm -rf /var/lib/apt/lists/* \
-  && rm percona-release_0.1-6.jessie_all.deb
+RUN set -e; \
+   apt update; \
+   apt install --no-install-recommends --yes \
+   percona-xtrabackup-80 qpress
+
+RUN set -e; \
+    apt update; \
+    percona-release setup pxc80; \
+    apt install -y percona-xtradb-cluster-garbd
+
+RUN set -e; \
+    apt update; \
+    percona-release setup ps80; \
+    apt install -y percona-server-client
 
 COPY hack/docker/stash-percona-xtradb/ /
 
 RUN chmod +x /backup.sh \
   && chmod +x /restore.sh
 
-COPY --from=0 restic /bin/restic
+COPY --from=0 /restic /bin/restic
 COPY bin/{ARG_OS}_{ARG_ARCH}/{ARG_BIN} /{ARG_BIN}
 
 ENTRYPOINT ["/{ARG_BIN}"]
