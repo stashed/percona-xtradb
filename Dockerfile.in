@@ -31,22 +31,32 @@ FROM {ARG_FROM}
 
 LABEL org.opencontainers.image.source https://github.com/stashed/percona-xtradb
 
-RUN set -e; \
-  apt-get update; \
-  apt-get install --no-install-recommends --yes \
-    apt-transport-https \
-    ca-certificates pwgen wget netcat socat \
+ENV DEBIAN_FRONTEND noninteractive
+ENV DEBCONF_NONINTERACTIVE_SEEN true
+
+# https://docs.percona.com/percona-software-repositories/installing.html
+RUN set -x \
+  && apt-get update \
+  && apt-get install --no-install-recommends --yes ca-certificates curl \
+  && curl -O https://repo.percona.com/apt/percona-release_latest.generic_all.deb
+
+RUN set -x \
+  && apt-get install --no-install-recommends --yes gnupg2 lsb-release ./percona-release_latest.generic_all.deb \
+  && rm ./percona-release_latest.generic_all.deb
+
+# https://docs.percona.com/percona-software-repositories/repository-location.html
+RUN set -x \
+  && percona-release enable tools release \
+  && percona-release enable ps-57 release \
+  && percona-release enable pxc-57 release \
+  && percona-release enable pxb-24 release \
+  && apt-get update
+
+# https://docs.percona.com/percona-xtrabackup/8.0/installation/apt_repo.html
+RUN set -x \
+  && apt-get install --no-install-recommends --yes percona-xtrabackup-24 qpress zstd \
+  && apt-get install --no-install-recommends --yes percona-xtradb-cluster-garbd-5.7 percona-server-client-5.7 \
   && rm -rf /var/lib/apt/lists/*
-
-RUN wget https://repo.percona.com/apt/percona-release_0.1-6.jessie_all.deb \
-  && dpkg -i percona-release_0.1-6.jessie_all.deb
-
-RUN apt-get update \
-  && apt-get install --no-install-recommends --yes \
-  percona-xtrabackup-24 percona-xtradb-cluster-garbd-5.7 percona-server-client-5.7 \
-  qpress \
-  && rm -rf /var/lib/apt/lists/* \
-  && rm percona-release_0.1-6.jessie_all.deb
 
 COPY hack/docker/stash-percona-xtradb/ /
 
