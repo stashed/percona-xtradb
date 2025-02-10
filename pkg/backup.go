@@ -107,6 +107,7 @@ func NewCmdBackup() *cobra.Command {
 			if opt.outputDir != "" {
 				return backupOutput.WriteOutput(filepath.Join(opt.outputDir, restic.DefaultOutputFileName))
 			}
+
 			return nil
 		},
 	}

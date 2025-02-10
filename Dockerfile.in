@@ -47,15 +47,15 @@ RUN set -x \
 # https://docs.percona.com/percona-software-repositories/repository-location.html
 RUN set -x \
   && percona-release enable tools release \
-  && percona-release enable ps-57 release \
-  && percona-release enable pxc-57 release \
-  && percona-release enable pxb-24 release \
+  && percona-release enable ps-80 release \
+  && percona-release enable pxc-80 release \
+  && percona-release enable pxb-80 release \
   && apt-get update
 
 # https://docs.percona.com/percona-xtrabackup/8.0/installation/apt_repo.html
 RUN set -x \
-  && apt-get install --no-install-recommends --yes percona-xtrabackup-24 qpress zstd \
-  && apt-get install --no-install-recommends --yes percona-xtradb-cluster-garbd-5.7 percona-server-client-5.7 \
+  && apt-get install --no-install-recommends --yes percona-xtrabackup-80 qpress zstd socat \
+  && apt-get install --no-install-recommends --yes percona-xtradb-cluster-garbd percona-server-client \
   && rm -rf /var/lib/apt/lists/*
 
 COPY hack/docker/stash-percona-xtradb/ /
