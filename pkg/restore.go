@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 
+	stashapi "stash.appscode.dev/apimachinery/apis"
 	api_v1beta1 "stash.appscode.dev/apimachinery/apis/stash/v1beta1"
 	"stash.appscode.dev/apimachinery/pkg/restic"
 
@@ -193,7 +194,7 @@ func (opt *perconaOptions) restorePerconaXtraDB(targetRef api_v1beta1.TargetRef)
 	} else {
 		// set backed up file name
 		opt.dumpOptions.FileName = xtraBackupStreamFile
-		opt.dumpOptions.Host = os.Getenv("HOSTNAME")
+		opt.dumpOptions.Host = os.Getenv(stashapi.Hostname)
 
 		// setup pipe command
 		session.cmd = &restic.Command{
