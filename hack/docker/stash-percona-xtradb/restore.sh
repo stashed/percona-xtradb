@@ -18,13 +18,3 @@ datadir=$1
 
 xbstream -x -C $datadir
 xtrabackup --prepare --target-dir=$datadir
-
-
-
-
-
-
-
-
-
-
