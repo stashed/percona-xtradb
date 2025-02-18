@@ -54,7 +54,7 @@ RUN set -x \
 
 # https://docs.percona.com/percona-xtrabackup/8.0/installation/apt_repo.html
 RUN set -x \
-  && apt-get install --no-install-recommends --yes percona-xtrabackup-83 qpress zstd \
+  && apt-get install --no-install-recommends --yes percona-xtrabackup-84 qpress zstd \
   && apt-get install --no-install-recommends --yes percona-xtradb-cluster-garbd percona-server-client \
   && rm -rf /var/lib/apt/lists/*
 
