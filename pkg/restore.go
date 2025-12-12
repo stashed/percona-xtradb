@@ -196,7 +196,7 @@ func (opt *perconaOptions) restorePerconaXtraDB(targetRef api_v1beta1.TargetRef)
 		// setup pipe command
 		session.cmd = &restic.Command{
 			Name: "bash",
-			Args: []interface{}{
+			Args: []any{
 				"-c",
 				"/restore.sh /var/lib/mysql",
 			},
