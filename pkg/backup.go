@@ -230,7 +230,7 @@ func (opt *perconaOptions) backupPerconaXtraDB(targetRef api_v1beta1.TargetRef) 
 
 		session.cmd = &restic.Command{
 			Name: "bash",
-			Args: []interface{}{
+			Args: []any{
 				"-c",
 				fmt.Sprintf("/backup.sh %s %s %s %s %s",
 					opt.garbdCnf.ClusterAddressWithListenOption(),
