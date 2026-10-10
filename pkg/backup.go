@@ -222,7 +222,8 @@ func (opt *perconaOptions) backupPerconaXtraDB(targetRef api_v1beta1.TargetRef) 
 		session.setUserArgs(opt.xtradbArgs)
 	} else { // clustered database
 		opt.backupOptions.StdinFileName = xtraBackupStreamFile
-		sstRequestOpts := fmt.Sprintf("%s,%d,%s",
+		sstRequestOpts := fmt.Sprintf(
+			"%s,%d,%s",
 			opt.garbdCnf.SSTMethod,
 			kubedbconfig_api.GarbdListenPort,
 			kubedbconfig_api.GarbdXtrabackupSSTRequestSuffix,
@@ -232,7 +233,8 @@ func (opt *perconaOptions) backupPerconaXtraDB(targetRef api_v1beta1.TargetRef) 
 			Name: "bash",
 			Args: []any{
 				"-c",
-				fmt.Sprintf("/backup.sh %s %s %s %s %s",
+				fmt.Sprintf(
+					"/backup.sh %s %s %s %s %s",
 					opt.garbdCnf.ClusterAddressWithListenOption(),
 					opt.garbdCnf.Group,
 					sstRequestOpts,
